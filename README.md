@@ -11,22 +11,54 @@ HungerTweaker attempts to apply its changes after all other mods. The simplified
 
 ## Compatibility CT API Reference
 
-HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, and Spice of Life: Carrot Edition. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing.
+HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, and Spice of Life: Carrot Edition. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing. The tables below show the ZenScript method signature, the CT parameter names, and what each value means.
 
-Common parameter types:
+Common CT parameter names:
 
 | Parameter | CT type | Meaning |
 | --- | --- | --- |
+| `handler` | `function(event as EventType) as void` | Event callback registered with `mods.hungertweaker.events.HungerEvents`. The callback receives one event object. |
 | `player` | `crafttweaker.player.IPlayer` | Target player. In HungerTweaker events, use `event.player`. |
 | `food` | `crafttweaker.item.IItemStack` | Food item stack, such as `<minecraft:apple>`. |
 | `nutrientName` | `string` | Nutrition nutrient id. Defaults are `dairy`, `fruit`, `grain`, `protein`, and `vegetable`; custom Nutrition configs may add more. Names are treated case-insensitively. |
 | `nutrients` | `IData` map | Map from nutrient id to number, for example `{"protein": 80.0, "grain": 45.0}`. |
 | `value` | `float` | Absolute nutrient value. Nutrition clamps values to its normal 0-100 range. |
 | `amount` | `float` | Relative nutrient change. Positive adds, negative subtracts. |
+| `scale` | `float` | Nutrition gain multiplier for a registered food item. `1.0` means the food gives the normal configured amount for that nutrient. |
+| `compareType` | `string` | Nutrition item matching mode. Use `DEFAULT`, `META_SENSITIVE`, `ONLY_NBT_SENSITIVE`, or `ALL_SENSITIVE`. Hyphenated names are also accepted. |
+| `hunger` | `int` | Hunger points restored or adjusted by a food value calculation. |
+| `saturationModifier` | `float` | Minecraft saturation modifier, not final saturation points. |
 | `foodGroup` | `string` | The Spice of Life food group identifier from its food group config. |
 | `modifier` | `float` | The Spice of Life nutritional value multiplier; `1.0` means unchanged, `0.5` means 50%. |
+| `countsTowardsAllTime` | `bool` | Whether an inserted Spice of Life history entry increments the player's all-time eaten counter. |
 
-Returned `IData` maps use plain string keys. Food value maps have `hunger`, `saturationModifier`, and `saturationIncrement`. Item maps have `empty`, `commandString`, `displayName`, `amount`, and `metadata`.
+Returned `IData` maps use plain string keys:
+
+| Map shape | Keys |
+| --- | --- |
+| Nutrition value map | Dynamic nutrient ids such as `dairy`, `fruit`, `grain`, `protein`, and `vegetable`; each value is a `float`. |
+| Nutrition nutrient info | `name`, `color`, `icon`, `decay`, `visible`, `oreDict`, `foodItemCount`. |
+| Food value map | `hunger`, `saturationModifier`, `saturationIncrement`. |
+| Item map | `empty`, `commandString`, `displayName`, `amount`, `metadata`. |
+| Spice of Life history | `historyLength`, `historySize`, `totalFoodsEatenAllTime`, `wasGivenFoodJournal`, `ticksActive`, `distinctFoodGroups`, `lastEatenFood`. |
+| Spice of Life history entry | `food`, `foodValues`, `worldTimeEaten`, `playerTimeEaten`, `foodGroups`. |
+| Spice of Life food data | `modifier`, `count`, `containsFoodOrItsFoodGroups`, `foodGroups`, `totalFoodValues`. |
+| Spice of Life food group info | `identifier`, `name`, `enabled`, `blacklist`, `formula`, `color`, `hidden`. |
+| Carrot Edition progress | `eatenFoodCount`, `foodsEaten`, `milestonesAchieved`, `nextMilestone`, `foodsUntilNextMilestone`, `hasReachedMax`, `healthModifier`, `config`. |
+| Carrot Edition config | `milestones`, `baseHearts`, `heartsPerMilestone`, `shouldShowUneatenFoods`, `minimumFoodValue`, `blacklist`, `whitelist`, `hasWhitelist`. |
+| Carrot Edition food data | `hasEaten`, `shouldCount`, `isAllowed`, `isHearty`, `progress`. |
+
+Useful imports for scripts:
+
+```zenscript
+import mods.hungertweaker.Nutrition;
+import mods.hungertweaker.SpiceOfLife;
+import mods.hungertweaker.SpiceOfLifeCarrotEdition;
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.NutritionFoodEatenEvent;
+import mods.hungertweaker.events.SpiceOfLifeFoodEatenEvent;
+import mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent;
+```
 
 ### Nutrition
 
@@ -60,13 +92,12 @@ Player nutrient values:
 
 Default nutrient shortcuts:
 
-| Nutrient | Getter | Setter | Add | Reset |
-| --- | --- | --- | --- | --- |
-| Dairy | `getDairy(player)` | `setDairy(player, value)` | `addDairy(player, amount)` | `resetDairy(player)` |
-| Fruit | `getFruit(player)` | `setFruit(player, value)` | `addFruit(player, amount)` | `resetFruit(player)` |
-| Grain | `getGrain(player)` | `setGrain(player, value)` | `addGrain(player, amount)` | `resetGrain(player)` |
-| Protein | `getProtein(player)` | `setProtein(player, value)` | `addProtein(player, amount)` | `resetProtein(player)` |
-| Vegetable | `getVegetable(player)` | `setVegetable(player, value)` | `addVegetable(player, amount)` | `resetVegetable(player)` |
+| Method pattern | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `getDairy(player)`, `getFruit(player)`, `getGrain(player)`, `getProtein(player)`, `getVegetable(player)` | `IPlayer player` | `float` | Reads one of Nutrition's five default nutrients. Equivalent to `getNutrient(player, "dairy")`, etc. |
+| `setDairy(player, value)`, `setFruit(player, value)`, `setGrain(player, value)`, `setProtein(player, value)`, `setVegetable(player, value)` | `IPlayer player`, `float value` | `void` | Sets one default nutrient to an absolute value. |
+| `addDairy(player, amount)`, `addFruit(player, amount)`, `addGrain(player, amount)`, `addProtein(player, amount)`, `addVegetable(player, amount)` | `IPlayer player`, `float amount` | `void` | Adds a relative amount to one default nutrient. |
+| `resetDairy(player)`, `resetFruit(player)`, `resetGrain(player)`, `resetProtein(player)`, `resetVegetable(player)` | `IPlayer player` | `void` | Resets one default nutrient. |
 
 Food nutrition:
 
@@ -95,7 +126,10 @@ Food nutrition:
 Example:
 
 ```zenscript
-mods.hungertweaker.events.HungerEvents.onNutritionFoodEaten(function(event as mods.hungertweaker.events.NutritionFoodEatenEvent) {
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.NutritionFoodEatenEvent;
+
+HungerEvents.onNutritionFoodEaten(function(event as NutritionFoodEatenEvent) {
     if (event.food == <minecraft:apple>) {
         event.addNutrient("fruit", 2.0);
         event.protein = 50.0;
@@ -151,9 +185,12 @@ Food groups:
 Example:
 
 ```zenscript
-mods.hungertweaker.events.HungerEvents.onSpiceOfLifeFoodEaten(function(event as mods.hungertweaker.events.SpiceOfLifeFoodEatenEvent) {
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.SpiceOfLifeFoodEatenEvent;
+
+HungerEvents.onSpiceOfLifeFoodEaten(function(event as SpiceOfLifeFoodEatenEvent) {
     if (event.modifier < 0.25) {
-        print("Low Spice of Life value for " ~ event.food.commandString);
+        print("Low Spice of Life value for " ~ event.food);
     }
 });
 ```
@@ -196,9 +233,12 @@ Mutating methods:
 Example:
 
 ```zenscript
-mods.hungertweaker.events.HungerEvents.onSOLCarrotFoodEaten(function(event as mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent) {
-    if (event.shouldCount && !event.hasEaten) {
-        print("New Carrot Edition food: " ~ event.food.commandString);
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent;
+
+HungerEvents.onSOLCarrotFoodEaten(function(event as SpiceOfLifeCarrotFoodEatenEvent) {
+    if (event.shouldCount) {
+        print("Foods until next Carrot milestone: " ~ event.foodsUntilNextMilestone);
     }
 });
 ```
@@ -215,9 +255,73 @@ Zen class: `mods.hungertweaker.events.HungerEvents`
 | `onSpiceOfLifeCarrotEditionFoodEaten(handler)` | Same as above | Alias for Carrot Edition. | Same as above. |
 | `onSOLCarrotFoodEaten(handler)` | Same as above | Short alias for Carrot Edition. | Same as above. |
 
-These compatibility events extend `FoodEatenEvent`, so they also have the normal `player`, `food`, `hunger`, `saturationModifier`, `hungerAdded`, and `saturationAdded` values.
+Each registration method takes one `handler` parameter. In ZenScript, pass a function with one event argument:
 
-The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional getters:
+```zenscript
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.NutritionFoodEatenEvent;
+
+HungerEvents.onNutritionFoodEaten(function(event as NutritionFoodEatenEvent) {
+    // Use event getters and methods here.
+});
+```
+
+These compatibility events extend `FoodEatenEvent`, so they also have the normal food eaten getters:
+
+| Getter | Parameters | Type | Meaning |
+| --- | --- | --- | --- |
+| `event.player` | none | `IPlayer` | Player who ate the food. |
+| `event.food` | none | `IItemStack` | Item stack that was eaten. |
+| `event.hunger` | none | `int` | Food hunger value used by AppleCore. |
+| `event.saturationModifier` | none | `float` | Food saturation modifier used by AppleCore. |
+| `event.hungerAdded` | none | `int` | Hunger points actually added after Minecraft's food logic. |
+| `event.saturationAdded` | none | `float` | Saturation points actually added after Minecraft's food logic. |
+
+`NutritionFoodEatenEvent` extra API:
+
+| Getter or method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `event.foodNutrition` | none | `IData` map | Nutrition gain calculated for `event.food` and `event.player`. |
+| `event.playerNutrition` | none | `IData` map | Current player nutrient values. |
+| `event.getNutrient(nutrientName)` | `string nutrientName` | `float` | Reads one nutrient from the player. |
+| `event.setNutrient(nutrientName, value)` | `string nutrientName`, `float value` | `void` | Sets one player nutrient to an absolute value. |
+| `event.addNutrient(nutrientName, amount)` | `string nutrientName`, `float amount` | `void` | Adds a relative amount to one player nutrient. |
+| `event.resetNutrient(nutrientName)` | `string nutrientName` | `void` | Resets one player nutrient. |
+| `event.dairy`, `event.fruit`, `event.grain`, `event.protein`, `event.vegetable` | none | `float` | Shortcut getters for Nutrition's five default nutrients. |
+| `event.dairy = value`, `event.fruit = value`, `event.grain = value`, `event.protein = value`, `event.vegetable = value` | `float value` | `void` | Shortcut setters for Nutrition's five default nutrients. |
+
+`SpiceOfLifeFoodEatenEvent` extra API:
+
+| Getter or method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `event.modifier` | none | `float` | Current Spice of Life diminishing returns multiplier for `event.food`. |
+| `event.history` | none | `IData` map | Player's Spice of Life history summary. |
+| `event.foodHistory` | none | `IData` map | Spice of Life data for `event.food`, including modifier, count, food groups, and total food values. |
+| `event.getFoodCount()` | none | `int` | Count of `event.food` in the current Spice of Life history. |
+| `event.getFoodGroupCount(foodGroup)` | `string foodGroup` | `int` | Count of `event.food` or matching foods in that food group. |
+| `event.getFoodGroups()` | none | `string[]` | Food groups that match `event.food`. |
+| `event.resetFoodHistory()` | none | `void` | Clears Spice of Life history and all-time counters for `event.player`. |
+| `event.syncFoodHistory()` | none | `void` | Syncs Spice of Life history to the client on server side. |
+
+`SpiceOfLifeCarrotFoodEatenEvent` extra API:
+
+| Getter or method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `event.hasEaten` | none | `bool` | Whether the player's current Carrot Edition food list contains `event.food`. |
+| `event.shouldCount` | none | `bool` | Whether `event.food` passes Carrot Edition config rules for milestone progress. |
+| `event.eatenFoodCount` | none | `int` | Unique foods stored in the player's Carrot food list. |
+| `event.foodsEatenForMilestones` | none | `int` | Unique foods that currently count toward milestones after filtering. |
+| `event.milestonesAchieved` | none | `int` | Number of milestone thresholds reached. |
+| `event.nextMilestone` | none | `int` | Food count required for the next milestone, or `-1` if maxed. |
+| `event.foodsUntilNextMilestone` | none | `int` | Remaining count until the next milestone, or a negative value if maxed. |
+| `event.progress` | none | `IData` map | Full Carrot progress map for the player. |
+| `event.foodProgress` | none | `IData` map | Carrot data for `event.food`, including `hasEaten`, `shouldCount`, `isAllowed`, `isHearty`, and `progress`. |
+| `event.addFood()` | none | `bool` | Adds `event.food` to the Carrot food list, then updates max health and syncs. |
+| `event.clearFoods()` | none | `void` | Clears the player's Carrot food list, updates max health, and syncs. |
+| `event.updateMaxHealth()` | none | `bool` | Reapplies the Carrot max-health modifier. Returns whether the modifier changed. |
+| `event.syncFoodList()` | none | `void` | Syncs the Carrot food list to the client on server side. |
+
+The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional compatibility getters:
 
 | Getter | Type | Meaning |
 | --- | --- | --- |
