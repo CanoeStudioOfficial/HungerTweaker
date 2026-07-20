@@ -31,6 +31,10 @@ public class HungerEventManager {
 	public static final EventList<CTPeacefulHungerRegenEvent> PEACEFUL_HUNGER_REGEN = new EventList<>();
 	public static final EventList<CTRegenEvent> REGEN = new EventList<>();
 	public static final EventList<CTSaturatedRegenEvent> SATURATED_REGEN = new EventList<>();
+	public static final EventList<CTNutritionFoodEatenEvent> NUTRITION_FOOD_EATEN = new EventList<>();
+	public static final EventList<CTSpiceOfLifeFoodEatenEvent> SPICE_OF_LIFE_FOOD_EATEN = new EventList<>();
+	public static final EventList<CTSpiceOfLifeCarrotFoodEatenEvent> SPICE_OF_LIFE_CARROT_FOOD_EATEN =
+			new EventList<>();
 
 	@ZenMethod
 	public static IEventHandle onGetFoodValues(IEventHandler<CTGetFoodValuesEvent> handler) {
@@ -126,5 +130,32 @@ public class HungerEventManager {
 	@ZenMethod
 	public static IEventHandle onSaturatedRegen(IEventHandler<CTSaturatedRegenEvent> handler) {
 		return SATURATED_REGEN.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onNutritionFoodEaten(IEventHandler<CTNutritionFoodEatenEvent> handler) {
+		return NUTRITION_FOOD_EATEN.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onSpiceOfLifeFoodEaten(IEventHandler<CTSpiceOfLifeFoodEatenEvent> handler) {
+		return SPICE_OF_LIFE_FOOD_EATEN.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onSpiceOfLifeCarrotFoodEaten(
+			IEventHandler<CTSpiceOfLifeCarrotFoodEatenEvent> handler) {
+		return SPICE_OF_LIFE_CARROT_FOOD_EATEN.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onSpiceOfLifeCarrotEditionFoodEaten(
+			IEventHandler<CTSpiceOfLifeCarrotFoodEatenEvent> handler) {
+		return SPICE_OF_LIFE_CARROT_FOOD_EATEN.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onSOLCarrotFoodEaten(IEventHandler<CTSpiceOfLifeCarrotFoodEatenEvent> handler) {
+		return SPICE_OF_LIFE_CARROT_FOOD_EATEN.add(handler);
 	}
 }

@@ -3,6 +3,9 @@ package coolsquid.hungertweaker;
 import coolsquid.hungertweaker.ct.CTFoodValues;
 import coolsquid.hungertweaker.ct.CTHunger;
 import coolsquid.hungertweaker.ct.CTStarvation;
+import coolsquid.hungertweaker.ct.compat.CTNutrition;
+import coolsquid.hungertweaker.ct.compat.CTSpiceOfLife;
+import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
 import coolsquid.hungertweaker.ct.events.CTAllowExhaustionEvent;
 import coolsquid.hungertweaker.ct.events.CTAllowRegenEvent;
 import coolsquid.hungertweaker.ct.events.CTAllowSaturatedRegenEvent;
@@ -17,10 +20,13 @@ import coolsquid.hungertweaker.ct.events.CTGetMaxHungerEvent;
 import coolsquid.hungertweaker.ct.events.CTGetRegenTickPeriodEvent;
 import coolsquid.hungertweaker.ct.events.CTGetSaturatedRegenTickPeriodEvent;
 import coolsquid.hungertweaker.ct.events.CTGetStarveTickPeriodEvent;
+import coolsquid.hungertweaker.ct.events.CTNutritionFoodEatenEvent;
 import coolsquid.hungertweaker.ct.events.CTPeacefulHungerRegenEvent;
 import coolsquid.hungertweaker.ct.events.CTPeacefulRegenEvent;
 import coolsquid.hungertweaker.ct.events.CTRegenEvent;
 import coolsquid.hungertweaker.ct.events.CTSaturatedRegenEvent;
+import coolsquid.hungertweaker.ct.events.CTSpiceOfLifeCarrotFoodEatenEvent;
+import coolsquid.hungertweaker.ct.events.CTSpiceOfLifeFoodEatenEvent;
 import coolsquid.hungertweaker.ct.events.CTStarveEvent;
 import coolsquid.hungertweaker.ct.events.HungerEventManager;
 import coolsquid.hungertweaker.ct.exhaustion.CTExhaustingAction;
@@ -33,6 +39,7 @@ import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.common.Loader;
 import squeek.applecore.api.food.FoodEvent;
 import squeek.applecore.api.food.FoodValues;
 import squeek.applecore.api.hunger.ExhaustionEvent;
@@ -69,6 +76,16 @@ public class ModEventHandler {
 	public void on(FoodEvent.FoodEaten ie) {
 		if (HungerEventManager.FOOD_EATEN.hasHandlers()) {
 			HungerEventManager.FOOD_EATEN.publish(new CTFoodEatenEvent(ie));
+		}
+		if (Loader.isModLoaded(CTNutrition.MODID) && HungerEventManager.NUTRITION_FOOD_EATEN.hasHandlers()) {
+			HungerEventManager.NUTRITION_FOOD_EATEN.publish(new CTNutritionFoodEatenEvent(ie));
+		}
+		if (Loader.isModLoaded(CTSpiceOfLife.MODID) && HungerEventManager.SPICE_OF_LIFE_FOOD_EATEN.hasHandlers()) {
+			HungerEventManager.SPICE_OF_LIFE_FOOD_EATEN.publish(new CTSpiceOfLifeFoodEatenEvent(ie));
+		}
+		if (Loader.isModLoaded(CTSpiceOfLifeCarrotEdition.MODID)
+				&& HungerEventManager.SPICE_OF_LIFE_CARROT_FOOD_EATEN.hasHandlers()) {
+			HungerEventManager.SPICE_OF_LIFE_CARROT_FOOD_EATEN.publish(new CTSpiceOfLifeCarrotFoodEatenEvent(ie));
 		}
 	}
 

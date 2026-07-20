@@ -1,6 +1,11 @@
 package coolsquid.hungertweaker.ct.events;
 
+import coolsquid.hungertweaker.ct.compat.CTNutrition;
+import coolsquid.hungertweaker.ct.compat.CTSpiceOfLife;
+import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.data.DataMap;
+import crafttweaker.api.data.IData;
 import crafttweaker.api.event.IPlayerEvent;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -54,6 +59,40 @@ public class CTGetFoodValuesEvent implements IPlayerEvent {
 	@ZenGetter("food")
 	public IItemStack getFood() {
 		return CraftTweakerMC.getIItemStack(this.internal.food);
+	}
+
+	@ZenGetter("nutrition")
+	public IData getNutrition() {
+		return CTNutrition.isLoaded() ? CTNutrition.foodNutritionData(this.internal.food, this.internal.player)
+				: DataMap.EMPTY;
+	}
+
+	@ZenGetter("playerNutrition")
+	public IData getPlayerNutrition() {
+		return CTNutrition.isLoaded() ? CTNutrition.playerNutritionData(this.internal.player) : DataMap.EMPTY;
+	}
+
+	@ZenGetter("spiceOfLife")
+	public IData getSpiceOfLife() {
+		return CTSpiceOfLife.isLoaded() ? CTSpiceOfLife.foodDataForPlayer(this.internal.player, this.internal.food)
+				: DataMap.EMPTY;
+	}
+
+	@ZenGetter("spiceOfLifeModifier")
+	public float getSpiceOfLifeModifier() {
+		return CTSpiceOfLife.isLoaded() ? CTSpiceOfLife.getFoodModifier(this.getPlayer(), this.getFood()) : 1;
+	}
+
+	@ZenGetter("spiceOfLifeCarrot")
+	public IData getSpiceOfLifeCarrot() {
+		return CTSpiceOfLifeCarrotEdition.isLoaded()
+				? CTSpiceOfLifeCarrotEdition.foodDataForPlayer(this.internal.player, this.internal.food)
+				: DataMap.EMPTY;
+	}
+
+	@ZenGetter("solCarrot")
+	public IData getSOLCarrot() {
+		return this.getSpiceOfLifeCarrot();
 	}
 
 	@Override
