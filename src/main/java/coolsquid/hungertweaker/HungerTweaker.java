@@ -9,16 +9,15 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(modid = HungerTweaker.MODID, name = HungerTweaker.NAME, version = HungerTweaker.VERSION,
-		dependencies = HungerTweaker.DEPENDENCIES, updateJSON = HungerTweaker.UPDATE_JSON)
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
+		dependencies = HungerTweaker.DEPENDENCIES)
 public class HungerTweaker {
 
-	public static final String MODID = "hungertweaker";
-	public static final String NAME = "HungerTweaker";
-	public static final String VERSION = "1.3.0";
+	public static final String MOD_ID = Tags.MOD_ID;
+	public static final String NAME = Tags.MOD_NAME;
+	public static final String VERSION = Tags.VERSION;
 	public static final String DEPENDENCIES = "required-after:crafttweaker@[4.0.0,);required-after:applecore@[3.2.0,);"
 			+ "after:nutrition;after:spiceoflife;after:solcarrot;after:foodspoiling";
-	public static final String UPDATE_JSON = "";
 
 	public static final Logger LOGGER = LogManager.getFormatterLogger(NAME);
 
