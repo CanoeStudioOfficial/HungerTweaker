@@ -25,11 +25,6 @@ public class CTNutritionFoodEatenEvent extends CTFoodEatenEvent {
 		return CTNutrition.foodNutritionData(this.internal.food, this.internal.player);
 	}
 
-	@ZenGetter("playerNutrition")
-	public IData getPlayerNutrition() {
-		return CTNutrition.playerNutritionData(this.internal.player);
-	}
-
 	@ZenMethod
 	public float getNutrient(String nutrientName) {
 		return CTNutrition.getNutrient(this.getPlayer(), nutrientName);

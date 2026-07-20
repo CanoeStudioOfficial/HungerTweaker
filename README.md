@@ -325,6 +325,8 @@ HungerEvents.onNutritionFoodEaten(function(event as NutritionFoodEatenEvent) {
 });
 ```
 
+Inheritance note: `NutritionFoodEatenEvent`, `SpiceOfLifeFoodEatenEvent`, and `SpiceOfLifeCarrotFoodEatenEvent` all inherit the shared `FoodEatenEvent` getters, while `FoodSpoilingFoodValuesEvent` inherits the shared `GetFoodValuesEvent` getters. The event-specific tables below only apply to that event family.
+
 The Nutrition, The Spice of Life, and Carrot Edition food-eaten compatibility events extend `FoodEatenEvent`, so they also have the normal food eaten getters:
 
 | Getter | Parameters | Type | Meaning |
@@ -395,11 +397,8 @@ The Nutrition, The Spice of Life, and Carrot Edition food-eaten compatibility ev
 
 | Getter or method | Parameters | Returns | Meaning |
 | --- | --- | --- | --- |
-| `event.foodSpoiling` | none | `IData` map | Full FoodSpoiling data map for `event.food`. |
 | `event.rotState` | none | `string` | Raw FoodSpoiling rot state: `SUCCESS`, `PASS`, or `FAIL`. |
 | `event.canSpoil` | none | `bool` | Whether `event.food` is actively tracked by FoodSpoiling. |
-| `event.spoilage` | none | `float` | Rot progress from `0.0` fresh to `1.0` fully spoiled. |
-| `event.freshness` | none | `float` | Freshness from `1.0` fresh to `0.0` fully spoiled. |
 | `event.saturationMultiplier` | none | `float` | Same as `event.freshness`; intended for saturation scaling. |
 | `event.ticksToRot` | none | `int` | Total ticks before rot in this player/container context. |
 | `event.remainingTicks` | none | `int` | Estimated ticks left before full spoilage. |

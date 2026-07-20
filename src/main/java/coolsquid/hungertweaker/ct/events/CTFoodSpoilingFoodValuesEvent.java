@@ -2,7 +2,6 @@ package coolsquid.hungertweaker.ct.events;
 
 import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
 import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.data.IData;
 import squeek.applecore.api.food.FoodEvent.GetPlayerFoodValues;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
@@ -19,11 +18,6 @@ public class CTFoodSpoilingFoodValuesEvent extends CTGetFoodValuesEvent {
 		this.internal = internal;
 	}
 
-	@ZenGetter("foodSpoiling")
-	public IData getFoodSpoiling() {
-		return CTFoodSpoiling.foodSpoilingData(this.internal.player, this.internal.food);
-	}
-
 	@ZenGetter("rotState")
 	public String getRotState() {
 		return CTFoodSpoiling.getRotState(this.internal.player, this.internal.food);
@@ -32,16 +26,6 @@ public class CTFoodSpoilingFoodValuesEvent extends CTGetFoodValuesEvent {
 	@ZenGetter("canSpoil")
 	public boolean canSpoil() {
 		return CTFoodSpoiling.canSpoil(this.internal.player, this.internal.food);
-	}
-
-	@ZenGetter("spoilage")
-	public float getSpoilage() {
-		return CTFoodSpoiling.getSpoilage(this.internal.player, this.internal.food);
-	}
-
-	@ZenGetter("freshness")
-	public float getFreshness() {
-		return CTFoodSpoiling.getFreshness(this.internal.player, this.internal.food);
 	}
 
 	@ZenGetter("saturationMultiplier")
