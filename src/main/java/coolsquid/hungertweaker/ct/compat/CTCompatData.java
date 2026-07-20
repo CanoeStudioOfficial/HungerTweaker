@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import crafttweaker.api.data.DataBool;
+import crafttweaker.api.data.DataDouble;
 import crafttweaker.api.data.DataFloat;
 import crafttweaker.api.data.DataInt;
 import crafttweaker.api.data.DataList;
@@ -34,6 +35,10 @@ final class CTCompatData {
 
 	static IData floating(float value) {
 		return new DataFloat(value);
+	}
+
+	static IData doubleValue(double value) {
+		return new DataDouble(value);
 	}
 
 	static IData longValue(long value) {

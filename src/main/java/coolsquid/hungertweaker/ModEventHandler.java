@@ -3,6 +3,7 @@ package coolsquid.hungertweaker;
 import coolsquid.hungertweaker.ct.CTFoodValues;
 import coolsquid.hungertweaker.ct.CTHunger;
 import coolsquid.hungertweaker.ct.CTStarvation;
+import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
 import coolsquid.hungertweaker.ct.compat.CTNutrition;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLife;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
@@ -13,6 +14,7 @@ import coolsquid.hungertweaker.ct.events.CTAllowStarvationEvent;
 import coolsquid.hungertweaker.ct.events.CTExhaustedEvent;
 import coolsquid.hungertweaker.ct.events.CTExhaustingActionEvent;
 import coolsquid.hungertweaker.ct.events.CTFoodEatenEvent;
+import coolsquid.hungertweaker.ct.events.CTFoodSpoilingFoodValuesEvent;
 import coolsquid.hungertweaker.ct.events.CTFoodStatsAdditionEvent;
 import coolsquid.hungertweaker.ct.events.CTGetFoodValuesEvent;
 import coolsquid.hungertweaker.ct.events.CTGetMaxExhaustionEvent;
@@ -69,6 +71,10 @@ public class ModEventHandler {
 	public void on(FoodEvent.GetPlayerFoodValues ie) {
 		if (HungerEventManager.GET_FOOD_VALUES.hasHandlers()) {
 			HungerEventManager.GET_FOOD_VALUES.publish(new CTGetFoodValuesEvent(ie));
+		}
+		if (Loader.isModLoaded(CTFoodSpoiling.MODID)
+				&& HungerEventManager.FOOD_SPOILING_FOOD_VALUES.hasHandlers()) {
+			HungerEventManager.FOOD_SPOILING_FOOD_VALUES.publish(new CTFoodSpoilingFoodValuesEvent(ie));
 		}
 	}
 

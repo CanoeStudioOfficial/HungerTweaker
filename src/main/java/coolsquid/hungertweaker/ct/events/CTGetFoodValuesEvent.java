@@ -1,5 +1,6 @@
 package coolsquid.hungertweaker.ct.events;
 
+import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
 import coolsquid.hungertweaker.ct.compat.CTNutrition;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLife;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
@@ -93,6 +94,27 @@ public class CTGetFoodValuesEvent implements IPlayerEvent {
 	@ZenGetter("solCarrot")
 	public IData getSOLCarrot() {
 		return this.getSpiceOfLifeCarrot();
+	}
+
+	@ZenGetter("foodSpoiling")
+	public IData getFoodSpoiling() {
+		return CTFoodSpoiling.isLoaded() ? CTFoodSpoiling.foodSpoilingData(this.internal.player, this.internal.food)
+				: DataMap.EMPTY;
+	}
+
+	@ZenGetter("foodSpoilage")
+	public IData getFoodSpoilage() {
+		return this.getFoodSpoiling();
+	}
+
+	@ZenGetter("spoilage")
+	public float getSpoilage() {
+		return CTFoodSpoiling.isLoaded() ? CTFoodSpoiling.getSpoilage(this.internal.player, this.internal.food) : 0;
+	}
+
+	@ZenGetter("freshness")
+	public float getFreshness() {
+		return CTFoodSpoiling.isLoaded() ? CTFoodSpoiling.getFreshness(this.internal.player, this.internal.food) : 1;
 	}
 
 	@Override

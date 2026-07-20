@@ -17,7 +17,7 @@ public class HungerTweaker {
 	public static final String NAME = "HungerTweaker";
 	public static final String VERSION = "1.3.0";
 	public static final String DEPENDENCIES = "required-after:crafttweaker@[4.0.0,);required-after:applecore@[3.2.0,);"
-			+ "after:nutrition;after:spiceoflife;after:solcarrot";
+			+ "after:nutrition;after:spiceoflife;after:solcarrot;after:foodspoiling";
 	public static final String UPDATE_JSON = "";
 
 	public static final Logger LOGGER = LogManager.getFormatterLogger(NAME);

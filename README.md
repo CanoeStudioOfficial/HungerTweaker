@@ -11,7 +11,7 @@ HungerTweaker attempts to apply its changes after all other mods. The simplified
 
 ## Compatibility CT API Reference
 
-HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, and Spice of Life: Carrot Edition. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing. The tables below show the ZenScript method signature, the CT parameter names, and what each value means.
+HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, Spice of Life: Carrot Edition, and FoodSpoiling. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing. The tables below show the ZenScript method signature, the CT parameter names, and what each value means.
 
 ### Required Nutrition Dependency
 
@@ -38,6 +38,9 @@ Common CT parameter names:
 | `compareType` | `string` | Nutrition item matching mode. Use `DEFAULT`, `META_SENSITIVE`, `ONLY_NBT_SENSITIVE`, or `ALL_SENSITIVE`. Hyphenated names are also accepted. |
 | `hunger` | `int` | Hunger points restored or adjusted by a food value calculation. |
 | `saturationModifier` | `float` | Minecraft saturation modifier, not final saturation points. |
+| `spoilage` | `float` | FoodSpoiling rot progress from `0.0` fresh to `1.0` fully spoiled. |
+| `freshness` | `float` | Inverse of `spoilage`; `1.0` fresh to `0.0` fully spoiled. |
+| `saturationMultiplier` | `float` | Recommended multiplier for reducing saturation from FoodSpoiling freshness. |
 | `foodGroup` | `string` | The Spice of Life food group identifier from its food group config. |
 | `modifier` | `float` | The Spice of Life nutritional value multiplier; `1.0` means unchanged, `0.5` means 50%. |
 | `countsTowardsAllTime` | `bool` | Whether an inserted Spice of Life history entry increments the player's all-time eaten counter. |
@@ -57,6 +60,7 @@ Returned `IData` maps use plain string keys:
 | Carrot Edition progress | `eatenFoodCount`, `foodsEaten`, `milestonesAchieved`, `nextMilestone`, `foodsUntilNextMilestone`, `hasReachedMax`, `healthModifier`, `config`. |
 | Carrot Edition config | `milestones`, `baseHearts`, `heartsPerMilestone`, `shouldShowUneatenFoods`, `minimumFoodValue`, `blacklist`, `whitelist`, `hasWhitelist`. |
 | Carrot Edition food data | `hasEaten`, `shouldCount`, `isAllowed`, `isHearty`, `progress`. |
+| FoodSpoiling data | `rotState`, `canSpoil`, `doesNotRot`, `hasExpiration`, `expirationDays`, `baseTicksToRot`, `ticksToRot`, `remainingTicks`, `elapsedTicks`, `spoilage`, `freshness`, `saturationMultiplier`, `lifetimeFactor`, `hasCreationTime`, `creationTime`, `hasRemainingLifetime`, `remainingLifetime`, `hasLastLifetimeFactor`, `lastLifetimeFactor`, `hasID`, `id`. |
 
 Useful imports for scripts:
 
@@ -64,10 +68,12 @@ Useful imports for scripts:
 import mods.hungertweaker.Nutrition;
 import mods.hungertweaker.SpiceOfLife;
 import mods.hungertweaker.SpiceOfLifeCarrotEdition;
+import mods.hungertweaker.FoodSpoiling;
 import mods.hungertweaker.events.HungerEvents;
 import mods.hungertweaker.events.NutritionFoodEatenEvent;
 import mods.hungertweaker.events.SpiceOfLifeFoodEatenEvent;
 import mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent;
+import mods.hungertweaker.events.FoodSpoilingFoodValuesEvent;
 ```
 
 ### Nutrition
@@ -253,6 +259,47 @@ HungerEvents.onSOLCarrotFoodEaten(function(event as SpiceOfLifeCarrotFoodEatenEv
 });
 ```
 
+### FoodSpoiling
+
+Zen class: `mods.hungertweaker.FoodSpoiling`
+
+Spoilage and saturation helpers:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `isLoaded()` | none | `bool` | Whether FoodSpoiling is loaded. |
+| `getRotState(food)` | `IItemStack food` | `string` | Raw FoodSpoiling state: `SUCCESS` means the food can spoil, `PASS` means explicitly does not rot, and `FAIL` means not tracked by FoodSpoiling. |
+| `canSpoil(food)` | `IItemStack food` | `bool` | Whether FoodSpoiling actively tracks and rots the food. |
+| `doesNotRot(food)` | `IItemStack food` | `bool` | Whether the food is explicitly configured as non-rotting. |
+| `getExpirationDays(food)` | `IItemStack food` | `double` | Configured lifetime in FoodSpoiling days, or `NaN` if the food is not configured. |
+| `getBaseTicksToRot(food)` | `IItemStack food` | `int` | Lifetime in ticks before container multipliers. Returns `-1` when the food cannot spoil. |
+| `getTicksToRot(food)` | `IItemStack food` | `int` | Lifetime in ticks without player/container context. |
+| `getTicksToRot(player, food)` | `IPlayer player`, `IItemStack food` | `int` | Lifetime in ticks with the player's current container lifetime factor applied; `-1` means spoilage is paused or not applicable. |
+| `getRemainingTicks(player, food)` | `IPlayer player`, `IItemStack food` | `int` | Estimated ticks left before the food fully spoils in the current player/container context. |
+| `getSpoilage(player, food)` | `IPlayer player`, `IItemStack food` | `float` | Rot progress from `0.0` fresh to `1.0` fully spoiled. |
+| `getFreshness(player, food)` | `IPlayer player`, `IItemStack food` | `float` | Freshness from `1.0` fresh to `0.0` fully spoiled. |
+| `getSaturationMultiplier(player, food)` | `IPlayer player`, `IItemStack food` | `float` | Same as freshness; useful for scaling `saturationModifier`. |
+| `getSpoiledSaturationModifier(player, food, saturationModifier)` | `IPlayer player`, `IItemStack food`, `float saturationModifier` | `float` | Returns `saturationModifier * freshness`. |
+| `getLifetimeFactor(player, food)` | `IPlayer player`, `IItemStack food` | `double` | FoodSpoiling container lifetime factor for the player's current open container. Higher means slower spoilage; negative means paused. |
+| `hasCreationTime(food)` | `IItemStack food` | `bool` | Whether the stack has FoodSpoiling's `CreationTime` tag. |
+| `getCreationTime(food)` | `IItemStack food` | `long` | Stored FoodSpoiling creation world time. |
+| `hasRemainingLifetime(food)` | `IItemStack food` | `bool` | Whether the stack stores paused `RemainingLifetime` instead of active creation time. |
+| `getRemainingLifetime(food)` | `IItemStack food` | `int` | Stored paused lifetime in base ticks. |
+| `getFoodSpoilage(player, food)` | `IPlayer player`, `IItemStack food` | `IData` map | Full FoodSpoiling data map for the stack. |
+
+Example:
+
+```zenscript
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.FoodSpoilingFoodValuesEvent;
+
+HungerEvents.onFoodSpoilingSaturation(function(event as FoodSpoilingFoodValuesEvent) {
+    if (event.canSpoil) {
+        event.applySpoilageToSaturation();
+    }
+});
+```
+
 ### Compatibility Events
 
 Zen class: `mods.hungertweaker.events.HungerEvents`
@@ -264,6 +311,8 @@ Zen class: `mods.hungertweaker.events.HungerEvents`
 | `onSpiceOfLifeCarrotFoodEaten(handler)` | `mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent` | AppleCore `FoodEaten` fires and Carrot Edition is loaded. | `hasEaten`, `shouldCount`, `progress`, `foodProgress`, add/clear/update/sync helpers. |
 | `onSpiceOfLifeCarrotEditionFoodEaten(handler)` | Same as above | Alias for Carrot Edition. | Same as above. |
 | `onSOLCarrotFoodEaten(handler)` | Same as above | Short alias for Carrot Edition. | Same as above. |
+| `onFoodSpoilingFoodValues(handler)` | `mods.hungertweaker.events.FoodSpoilingFoodValuesEvent` | AppleCore `GetPlayerFoodValues` fires and FoodSpoiling is loaded. | FoodSpoiling rot data plus writable `hunger` and `saturationModifier`. |
+| `onFoodSpoilingSaturation(handler)` | Same as above | Alias for FoodSpoiling saturation handling. | Same as above. |
 
 Each registration method takes one `handler` parameter. In ZenScript, pass a function with one event argument:
 
@@ -276,7 +325,7 @@ HungerEvents.onNutritionFoodEaten(function(event as NutritionFoodEatenEvent) {
 });
 ```
 
-These compatibility events extend `FoodEatenEvent`, so they also have the normal food eaten getters:
+The Nutrition, The Spice of Life, and Carrot Edition food-eaten compatibility events extend `FoodEatenEvent`, so they also have the normal food eaten getters:
 
 | Getter | Parameters | Type | Meaning |
 | --- | --- | --- | --- |
@@ -286,6 +335,17 @@ These compatibility events extend `FoodEatenEvent`, so they also have the normal
 | `event.saturationModifier` | none | `float` | Food saturation modifier used by AppleCore. |
 | `event.hungerAdded` | none | `int` | Hunger points actually added after Minecraft's food logic. |
 | `event.saturationAdded` | none | `float` | Saturation points actually added after Minecraft's food logic. |
+
+`FoodSpoilingFoodValuesEvent` extends `GetFoodValuesEvent`, so it fires before the food is eaten and can modify the food values:
+
+| Getter or setter | Parameters | Type | Meaning |
+| --- | --- | --- | --- |
+| `event.player` | none | `IPlayer` | Player whose food values are being calculated. |
+| `event.food` | none | `IItemStack` | Food item stack being calculated. |
+| `event.hunger` | none, or `int hunger` when assigned | `int` | Writable hunger value for this food calculation. |
+| `event.saturationModifier` | none, or `float saturationModifier` when assigned | `float` | Writable saturation modifier; this is the main value to change for spoilage-based saturation loss. |
+| `event.unmodifiedHunger` | none | `int` | Original hunger value before this event's edits. |
+| `event.unmodifiedSaturationModifier` | none | `float` | Original saturation modifier before this event's edits. |
 
 `NutritionFoodEatenEvent` extra API:
 
@@ -331,6 +391,21 @@ These compatibility events extend `FoodEatenEvent`, so they also have the normal
 | `event.updateMaxHealth()` | none | `bool` | Reapplies the Carrot max-health modifier. Returns whether the modifier changed. |
 | `event.syncFoodList()` | none | `void` | Syncs the Carrot food list to the client on server side. |
 
+`FoodSpoilingFoodValuesEvent` extra API:
+
+| Getter or method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `event.foodSpoiling` | none | `IData` map | Full FoodSpoiling data map for `event.food`. |
+| `event.rotState` | none | `string` | Raw FoodSpoiling rot state: `SUCCESS`, `PASS`, or `FAIL`. |
+| `event.canSpoil` | none | `bool` | Whether `event.food` is actively tracked by FoodSpoiling. |
+| `event.spoilage` | none | `float` | Rot progress from `0.0` fresh to `1.0` fully spoiled. |
+| `event.freshness` | none | `float` | Freshness from `1.0` fresh to `0.0` fully spoiled. |
+| `event.saturationMultiplier` | none | `float` | Same as `event.freshness`; intended for saturation scaling. |
+| `event.ticksToRot` | none | `int` | Total ticks before rot in this player/container context. |
+| `event.remainingTicks` | none | `int` | Estimated ticks left before full spoilage. |
+| `event.applySpoilageToSaturation()` | none | `void` | Sets `event.saturationModifier` to `event.saturationModifier * event.saturationMultiplier`. |
+| `event.multiplySaturation(multiplier)` | `float multiplier` | `void` | Multiplies the current `event.saturationModifier` by a custom value. |
+
 The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional compatibility getters:
 
 | Getter | Type | Meaning |
@@ -341,6 +416,10 @@ The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional 
 | `event.spiceOfLifeModifier` | `float` | Spice of Life modifier for this food, or `1.0` when not loaded. |
 | `event.spiceOfLifeCarrot` | `IData` map | Carrot Edition food/progress data for this food, or empty map when not loaded. |
 | `event.solCarrot` | `IData` map | Alias of `event.spiceOfLifeCarrot`. |
+| `event.foodSpoiling` | `IData` map | FoodSpoiling rot data for this food, or empty map when not loaded. |
+| `event.foodSpoilage` | `IData` map | Alias of `event.foodSpoiling`. |
+| `event.spoilage` | `float` | FoodSpoiling rot progress, or `0.0` when not loaded. |
+| `event.freshness` | `float` | FoodSpoiling freshness, or `1.0` when not loaded. |
 
 For a more complete overview, visit the HungerTweaker wiki.
 https://github.com/coolsquid/HungerTweaker/wiki/
