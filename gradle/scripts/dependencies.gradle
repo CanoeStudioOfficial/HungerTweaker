@@ -25,6 +25,13 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    maven {
+        // CraftTweaker
+        url "https://maven.blamejared.com/"
+    }
+    maven {
+        url "https://www.ryanliptak.com/maven/"
+    }
     mavenLocal() // Must be last for caching to work
 }
 
@@ -38,6 +45,13 @@ dependencies {
     runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
     runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
+
+    implementation rfg.deobf("curse.maven:lemonskin-1337144:7763338")
+    implementation "applecore:AppleCore:1.12.2-3.2.0+335.2dbab:api"
+    implementation "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.715"
+    implementation "curse.maven:the-spice-of-life-220811:2571951"
+    implementation rfg.deobf("curse.maven:spice-of-life-carrot-edition-277616:2959847")
+    implementation rfg.deobf("curse.maven:nutrition-unofficial-extended-life-continued-1523645:7982415")
 
     // Example - Dependency descriptor:
     // 'com.google.code.gson:gson:2.8.6' << group: com.google.code.gson, name:gson, version:2.8.6
