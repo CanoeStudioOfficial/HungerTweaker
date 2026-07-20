@@ -13,6 +13,16 @@ HungerTweaker attempts to apply its changes after all other mods. The simplified
 
 HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, and Spice of Life: Carrot Edition. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing. The tables below show the ZenScript method signature, the CT parameter names, and what each value means.
 
+### Required Nutrition Dependency
+
+**Required:** the Nutrition CT helpers require [Nutrition Unofficial Extended Life Continued](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life-continued). This integration is built against the original `ca.wescook.nutrition` package layout used by [WesCook/Nutrition 1.12](https://github.com/WesCook/Nutrition/tree/1.12/src/main/java/ca/wescook/nutrition), and the Continued fork keeps that layout.
+
+| Nutrition mod | Compatibility |
+| --- | --- |
+| [Nutrition Unofficial Extended Life Continued](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life-continued) | Supported and required for this integration. |
+| [Nutrition Unofficial Extended Life](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life) | Not compatible; it changed the package layout used by this CT integration. |
+| [WesCook/Nutrition](https://github.com/WesCook/Nutrition) | May be compatible in theory, but stability is not guaranteed. Use the Continued fork for reliable compatibility. |
+
 Common CT parameter names:
 
 | Parameter | CT type | Meaning |
