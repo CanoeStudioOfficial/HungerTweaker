@@ -10,7 +10,6 @@ import com.cazsius.solcarrot.tracking.FoodInstance;
 import com.cazsius.solcarrot.tracking.FoodList;
 import com.cazsius.solcarrot.tracking.MaxHealthHandler;
 import com.cazsius.solcarrot.tracking.ProgressInfo;
-import com.cazsius.solcarrot.tracking.ProgressInfo.ConfigInfo;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
@@ -190,7 +189,8 @@ public class CTSpiceOfLifeCarrotEdition {
 		return CTCompatData.map(data);
 	}
 
-	private static IData configData(ConfigInfo config) {
+	private static IData configData(Object configInfo) {
+		ProgressInfo.ConfigInfo config = (ProgressInfo.ConfigInfo) configInfo;
 		Map<String, IData> data = new LinkedHashMap<>();
 		data.put("milestones", CTCompatData.ints(config.milestones));
 		data.put("baseHearts", CTCompatData.integer(config.baseHearts));

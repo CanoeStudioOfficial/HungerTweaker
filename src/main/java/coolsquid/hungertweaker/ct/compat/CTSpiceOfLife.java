@@ -49,7 +49,8 @@ public class CTSpiceOfLife {
 	public static float getFoodGroupModifier(IPlayer player, IItemStack food, String foodGroup) {
 		requireLoaded();
 		EntityPlayer mcPlayer = getPlayer(player);
-		return FoodModifier.getFoodGroupModifier(FoodHistory.get(mcPlayer), getStack(food), getFoodGroup(foodGroup));
+		return FoodModifier.getFoodGroupModifier(FoodHistory.get(mcPlayer), getStack(food),
+				(FoodGroup) getFoodGroup(foodGroup));
 	}
 
 	@ZenMethod
@@ -121,7 +122,8 @@ public class CTSpiceOfLife {
 	@ZenMethod
 	public static int getFoodGroupCount(IPlayer player, IItemStack food, String foodGroup) {
 		requireLoaded();
-		return FoodHistory.get(getPlayer(player)).getFoodCountForFoodGroup(getStack(food), getFoodGroup(foodGroup));
+		return FoodHistory.get(getPlayer(player)).getFoodCountForFoodGroup(getStack(food),
+				(FoodGroup) getFoodGroup(foodGroup));
 	}
 
 	@ZenMethod
@@ -141,7 +143,7 @@ public class CTSpiceOfLife {
 	public static IData getTotalFoodValuesForFoodGroup(IPlayer player, IItemStack food, String foodGroup) {
 		requireLoaded();
 		return CTCompatData.foodValues(FoodHistory.get(getPlayer(player)).getTotalFoodValuesForFoodGroup(
-				getStack(food), getFoodGroup(foodGroup)));
+				getStack(food), (FoodGroup) getFoodGroup(foodGroup)));
 	}
 
 	@ZenMethod
@@ -245,7 +247,8 @@ public class CTSpiceOfLife {
 		return CTCompatData.map(data);
 	}
 
-	public static IData foodEatenData(FoodEaten foodEaten) {
+	private static IData foodEatenData(Object eatenFood) {
+		FoodEaten foodEaten = (FoodEaten) eatenFood;
 		Map<String, IData> data = new LinkedHashMap<>();
 		data.put("food", CTCompatData.itemStack(foodEaten.itemStack));
 		data.put("foodValues", CTCompatData.foodValues(foodEaten.foodValues));
@@ -255,7 +258,8 @@ public class CTSpiceOfLife {
 		return CTCompatData.map(data);
 	}
 
-	private static IData foodGroupData(FoodGroup foodGroup) {
+	private static IData foodGroupData(Object group) {
+		FoodGroup foodGroup = (FoodGroup) group;
 		Map<String, IData> data = new LinkedHashMap<>();
 		data.put("identifier", CTCompatData.string(foodGroup.identifier));
 		data.put("name", CTCompatData.string(foodGroup.name));
@@ -267,17 +271,17 @@ public class CTSpiceOfLife {
 		return CTCompatData.map(data);
 	}
 
-	private static List<String> groupNames(Collection<FoodGroup> foodGroups) {
+	private static List<String> groupNames(Collection<?> foodGroups) {
 		List<String> names = new ArrayList<>();
-		for (FoodGroup foodGroup : foodGroups) {
+		for (Object foodGroup : foodGroups) {
 			if (foodGroup != null) {
-				names.add(foodGroup.identifier);
+				names.add(((FoodGroup) foodGroup).identifier);
 			}
 		}
 		return names;
 	}
 
-	private static FoodGroup getFoodGroup(String identifier) {
+	private static Object getFoodGroup(String identifier) {
 		FoodGroup foodGroup = FoodGroupRegistry.getFoodGroup(identifier);
 		if (foodGroup != null) {
 			return foodGroup;
