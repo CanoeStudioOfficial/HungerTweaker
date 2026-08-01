@@ -13,15 +13,19 @@ HungerTweaker attempts to apply its changes after all other mods. The simplified
 
 HungerTweaker also exposes optional CraftTweaker helpers for Nutrition, The Spice of Life, Spice of Life: Carrot Edition, and FoodSpoiling. Except for `isLoaded()`, these methods require the corresponding mod to be loaded and will throw if it is missing. The tables below show the ZenScript method signature, the CT parameter names, and what each value means.
 
-### Required Nutrition Dependency
+### Nutrition Package Compatibility
 
-**Required:** the Nutrition CT helpers require [Nutrition Unofficial Extended Life Continued](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life-continued). This integration is built against the original `ca.wescook.nutrition` package layout used by [WesCook/Nutrition 1.12](https://github.com/WesCook/Nutrition/tree/1.12/src/main/java/ca/wescook/nutrition), and the Continued fork keeps that layout.
+The Nutrition CT helpers are built against the original `ca.wescook.nutrition` package layout used by [WesCook/Nutrition 1.12](https://github.com/WesCook/Nutrition/tree/1.12/src/main/java/ca/wescook/nutrition). After testing, this integration is compatible with Nutrition and Nutrition forks/branches as long as they keep that package layout and the same public API paths. It is not tied to one specific fork.
+
+If a Nutrition fork changes the Java package path away from `ca.wescook.nutrition`, HungerTweaker cannot link to it and the Nutrition CT helpers will not be compatible.
 
 | Nutrition mod | Compatibility |
 | --- | --- |
-| [Nutrition Unofficial Extended Life Continued](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life-continued) | Supported and required for this integration. |
-| [Nutrition Unofficial Extended Life](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life) | Not compatible; it changed the package layout used by this CT integration. |
-| [WesCook/Nutrition](https://github.com/WesCook/Nutrition) | May be compatible in theory, but stability is not guaranteed. Use the Continued fork for reliable compatibility. |
+| Any Nutrition branch/fork that keeps `ca.wescook.nutrition` | Compatible. |
+| [Nutrition Unofficial Extended Life](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life) | Compatible; tested with this integration. |
+| [Nutrition Unofficial Extended Life Continued](https://www.curseforge.com/minecraft/mc-mods/nutrition-unofficial-extended-life-continued) | Compatible; it keeps the original package layout. |
+| [WesCook/Nutrition](https://github.com/WesCook/Nutrition) | Compatible when using the 1.12 package layout/API expected by this integration. |
+| Branches/forks that rename or move the package path | Not compatible; HungerTweaker links against `ca.wescook.nutrition`. |
 
 Common CT parameter names:
 
