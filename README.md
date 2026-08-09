@@ -19,6 +19,14 @@ The event system functions largely like CraftTweaker's own event system. Scripts
 
 HungerTweaker attempts to apply its changes after all other mods. The simplified options are handled before the events, and event handlers may override the default values set by the simplified options.
 
+## Credits and License
+
+HungerTweaker Community Edition is an unofficial community-maintained continuation of the original [HungerTweaker project](https://github.com/coolsquid/HungerTweaker), maintained by CanoeStudio. It is not affiliated with or endorsed by the original author or the original project.
+
+The original project and the retained original API are released under the [Unlicense](LICENSE). The Unlicense is a public-domain dedication intended to release the work to the public domain, with a permissive fallback license in jurisdictions where a public-domain dedication is not recognized. This repository follows that license for the original content and the Community Edition additions.
+
+The original API documentation has been migrated into this README. The Community Edition adds the optional compatibility APIs, event hooks, documentation, and compatibility fixes described below.
+
 ## Original Core CT API Reference
 
 This section contains the original HungerTweaker API that was previously documented in the project Wiki. The API is still available in HungerTweaker Community Edition and uses the same `mods.hungertweaker...` ZenScript paths.
