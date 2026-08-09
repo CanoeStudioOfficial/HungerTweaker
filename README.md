@@ -11,13 +11,210 @@ As part of the unofficial maintenance work, the Community Edition adds optional 
 
 These integrations are optional and are only active when their corresponding mod is loaded. The Nutrition integration supports branches and forks that preserve the expected `ca.wescook.nutrition` package layout and public API. The README includes the required imports, complete method signatures, parameter and return-value meanings, event timing, and practical examples for developers.
 
-The project consists of two parts. Firstly, it includes a simplified wrapper around the AppleCore API. This can be used to set a variety of default values, as well as modify the [properties of food items](https://github.com/coolsquid/HungerTweaker/wiki/FoodValues). Secondly, it provides access to most of AppleCore's [events](https://github.com/coolsquid/HungerTweaker/wiki/HungerEvents). This can be used to dynamically modify and react to changes in a player's hunger, exhaustion, starvation, and regen.
+The project consists of two parts. Firstly, it includes a simplified wrapper around the AppleCore API. This can be used to set a variety of default values, as well as modify the [properties of food items](#foodvalues). Secondly, it provides access to most of AppleCore's [events](#core-events). This can be used to dynamically modify and react to changes in a player's hunger, exhaustion, starvation, and regen.
 
-The simplified wrapper is designed to be easy to use, and largely consists of static ZenMethods such as `mods.hungertweaker.Hunger.setMaxHunger(20)`. It has access to no other context than the previous value of the property, which can be used in [expressions](https://github.com/coolsquid/HungerTweaker/wiki/Expression), such as `mods.hungertweaker.Hunger.setMaxHunger("x/2")`.
+The simplified wrapper is designed to be easy to use, and largely consists of static ZenMethods such as `mods.hungertweaker.Hunger.setMaxHunger(20)`. It has access to no other context than the previous value of the property, which can be used in [expressions](#expressions), such as `mods.hungertweaker.Hunger.setMaxHunger("x/2")`.
 
 The event system functions largely like CraftTweaker's own event system. Scripts can register event handler functions, which are executed whenever the event occurs and have access to context, such as the IPlayer in question. As such, the event system can be used to produce far more advanced results than the simplified wrapper.
 
 HungerTweaker attempts to apply its changes after all other mods. The simplified options are handled before the events, and event handlers may override the default values set by the simplified options.
+
+## Original Core CT API Reference
+
+This section contains the original HungerTweaker API that was previously documented in the project Wiki. The API is still available in HungerTweaker Community Edition and uses the same `mods.hungertweaker...` ZenScript paths.
+
+### Core Imports
+
+```zenscript
+import mods.hungertweaker.FoodValues;
+import mods.hungertweaker.HUD;
+import mods.hungertweaker.Hunger;
+import mods.hungertweaker.Exhaustion;
+import mods.hungertweaker.ExhaustingAction;
+import mods.hungertweaker.Starvation;
+import mods.hungertweaker.Regen;
+import mods.hungertweaker.SaturatedRegen;
+import mods.hungertweaker.PeacefulRegen;
+import mods.hungertweaker.events.HungerEvents;
+```
+
+### Common Parameters
+
+Most numeric setters accept an `IData` value. The value may be a literal number or a quoted HungerTweaker expression. A literal is evaluated when the script loads; a quoted expression is evaluated whenever AppleCore asks for the value.
+
+| Input | Meaning |
+| --- | --- |
+| `20` | A fixed numeric value. |
+| `"x/2"` | A dynamic expression. `x` is the value before HungerTweaker applies this setting. |
+| `0`, `1`, `2` | Status values for deny, Vanilla/default behavior, and allow. |
+| `"DENY"`, `"DEFAULT"`, `"ALLOW"` | The named forms of the three status values. Names are case-insensitive. |
+
+### FoodValues
+
+Zen class: `mods.hungertweaker.FoodValues`
+
+`FoodValues` is obtained from an `IIngredient` through the `foodValues` getter. It applies to every matching food item. For example, `<minecraft:apple>.foodValues` targets apples, while an ore-dictionary ingredient can target multiple items. If multiple `FoodValues` instances match the same item, the instance retrieved last takes precedence for the AppleCore food values.
+
+| Property | Type | Access | Meaning |
+| --- | --- | --- | --- |
+| `hunger` | `int` | read/write | Hunger points restored by the food. The getter only works for one `IItemStack`; the setter can apply to all matching foods. |
+| `saturationModifier` | `float` | read/write | Saturation modifier used with the hunger value to calculate saturation restored. The getter only works for one `IItemStack`. |
+| `unmodifiedHunger` | `int` | read-only | Original hunger before HungerTweaker and other food-value changes. Only available for one `IItemStack`. |
+| `unmodifiedSaturationModifier` | `float` | read-only | Original saturation modifier before HungerTweaker and other food-value changes. Only available for one `IItemStack`. |
+| `alwaysEdible` | `bool` | read/write | Whether the `ItemFood` can be eaten regardless of hunger. |
+| `wolfFood` | `bool` | read/write | Whether the food is treated as a wolf's favorite food. |
+| `effect` | `IPotionEffect` | read/write | Potion effect applied by the food. |
+| `effectProbability` | `float` | read/write | Probability of applying the food's potion effect. |
+
+The core methods are also available as property setters:
+
+| Method | Parameters | Meaning |
+| --- | --- | --- |
+| `setHunger(value)` | `IData value` | Sets hunger for all matching food items. Accepts a number or expression. |
+| `setSaturationModifier(value)` | `IData value` | Sets saturation modifier for all matching food items. Accepts a number or expression. |
+| `setAlwaysEdible(value)` | `bool value` | Sets `alwaysEdible` on all matching food items. |
+| `setWolfFood(value)` | `bool value` | Sets `wolfFood` on all matching food items. |
+| `setEffect(value)` | `IPotionEffect value` | Sets the potion effect on all matching food items. |
+| `setEffectProbability(value)` | `float value` | Sets the potion effect probability on all matching food items. |
+
+Example:
+
+```zenscript
+import mods.hungertweaker.FoodValues;
+
+<minecraft:apple>.foodValues.hunger = 10;
+<minecraft:apple>.foodValues.saturationModifier = "x / 2";
+<minecraft:apple>.foodValues.alwaysEdible = true;
+```
+
+### Simple Hunger and Food Settings
+
+| Zen class | Method | Parameters | Meaning |
+| --- | --- | --- | --- |
+| `mods.hungertweaker.Hunger` | `setMaxHunger(value)` | `IData value` | Sets the size of the hunger bar. The UI is not resized and Vanilla hunger thresholds, such as the sprint threshold, remain unchanged. |
+| `mods.hungertweaker.Exhaustion` | `setMaxExhaustionLevel(value)` | `IData value` | Sets the exhaustion threshold at which exhaustion causes hunger loss. |
+| `mods.hungertweaker.Exhaustion` | `setConstantExhaustionIncrease(value)` | numeric `IData value` | Adds this amount of exhaustion to every player every tick. Set it to `0` to disable the extra increase. |
+| `mods.hungertweaker.Exhaustion` | `setDeltaExhaustion(value)` | `IData value` | Sets exhaustion removed when the maximum exhaustion level is reached. |
+| `mods.hungertweaker.Exhaustion` | `setDeltaHunger(value)` | `IData value` | Sets the hunger change caused by exhaustion. |
+| `mods.hungertweaker.Exhaustion` | `setDeltaSaturation(value)` | `IData value` | Sets the saturation change caused by exhaustion. |
+| `mods.hungertweaker.Exhaustion` | `setStatus(value)` | `IData value` | Enables, disables, or defers exhaustion using `DENY`, `DEFAULT`, or `ALLOW`. |
+| `mods.hungertweaker.Starvation` | `setInterval(value)` | `IData value` | Sets ticks between starvation damage applications. |
+| `mods.hungertweaker.Starvation` | `setDamage(value)` | `IData value` | Sets damage applied by starvation. |
+| `mods.hungertweaker.Starvation` | `setStatus(value)` | `IData value` | Enables, disables, or defers starvation. |
+| `mods.hungertweaker.HUD` | `setStatus(value)` | `IData value` | Controls the AppleCore food overlay: `DENY` disables it, `DEFAULT` uses Vanilla behavior, and `ALLOW` enables it. |
+
+### ExhaustingAction
+
+Zen class: `mods.hungertweaker.ExhaustingAction`
+
+The following action constants can be configured individually:
+
+`HARVEST_BLOCK`, `NORMAL_JUMP`, `SPRINTING_JUMP`, `ATTACK_ENTITY`, `DAMAGE_TAKEN`, `HUNGER_POTION`, `MOVEMENT_DIVE`, `MOVEMENT_SWIM`, `MOVEMENT_SPRINT`, `MOVEMENT_CROUCH`, and `MOVEMENT_WALK`.
+
+`ExhaustingAction.ALL` contains every action. Each action has a `name` property and a `setDeltaExhaustion(value)` method. The value accepts a number or expression and controls the exhaustion added by that action. Applying a setting to `ALL` first and then changing a specific action lets you create a general rule with exceptions.
+
+```zenscript
+import mods.hungertweaker.ExhaustingAction;
+
+for action in ExhaustingAction.ALL {
+    action.setDeltaExhaustion("x / 2");
+}
+ExhaustingAction.MOVEMENT_SPRINT.setDeltaExhaustion("x * 2");
+```
+
+### Regen Settings
+
+| Zen class | Method | Parameters | Meaning |
+| --- | --- | --- | --- |
+| `mods.hungertweaker.Regen` | `setInterval(value)` | `IData value` | Sets ticks between normal health regeneration checks. |
+| `mods.hungertweaker.Regen` | `setDeltaExhaustion(value)` | `IData value` | Sets exhaustion added when normal health regeneration occurs. |
+| `mods.hungertweaker.Regen` | `setDeltaHealth(value)` | `IData value` | Sets health restored by normal regeneration. |
+| `mods.hungertweaker.Regen` | `setStatus(value)` | `IData value` | Enables, disables, or defers normal regeneration. |
+| `mods.hungertweaker.SaturatedRegen` | `setInterval(value)` | `IData value` | Sets ticks between health regeneration checks caused by full hunger and saturation. |
+| `mods.hungertweaker.SaturatedRegen` | `setDeltaExhaustion(value)` | `IData value` | Sets exhaustion added by saturated regeneration. |
+| `mods.hungertweaker.SaturatedRegen` | `setDeltaHealth(value)` | `IData value` | Sets health restored by saturated regeneration. |
+| `mods.hungertweaker.SaturatedRegen` | `setStatus(value)` | `IData value` | Enables, disables, or defers saturated regeneration. |
+| `mods.hungertweaker.PeacefulRegen` | `setDeltaHealth(value)` | `IData value` | Sets health restored by peaceful-mode health regeneration. |
+| `mods.hungertweaker.PeacefulRegen` | `setDeltaHunger(value)` | `IData value` | Sets hunger added by peaceful-mode health regeneration. |
+| `mods.hungertweaker.PeacefulRegen` | `setHealthStatus(value)` | `IData value` | Controls peaceful-mode health regeneration. |
+| `mods.hungertweaker.PeacefulRegen` | `setHungerStatus(value)` | `IData value` | Controls peaceful-mode hunger regeneration. |
+| `mods.hungertweaker.PeacefulRegen` | `setStatus(value)` | `IData value` | Deprecated alias for `setHealthStatus(value)`. |
+
+### Core Events
+
+Zen class: `mods.hungertweaker.events.HungerEvents`
+
+Every registration method accepts one `handler` function and returns a CraftTweaker event handle. The handler receives one event object. Writable fields can be assigned in the handler; read-only fields provide context for the decision.
+
+| Registration method | Event type | Fires when | Writable or cancelable data | Read-only data |
+| --- | --- | --- | --- | --- |
+| `onGetFoodValues(handler)` | `GetFoodValuesEvent` | AppleCore retrieves food values. | `hunger`, `saturationModifier` | `unmodifiedHunger`, `unmodifiedSaturationModifier`, `food`, `player` |
+| `onFoodEaten(handler)` | `FoodEatenEvent` | A food item has been eaten. | None | `hunger`, `saturationModifier`, `hungerAdded`, `saturationAdded`, `food`, `player` |
+| `onFoodStatsAddition(handler)` | `FoodStatsAdditionEvent` | A food is about to be eaten. | Cancelable | `hunger`, `saturationModifier`, `player` |
+| `onAllowExhaustion(handler)` | `AllowExhaustionEvent` | AppleCore checks whether exhaustion is allowed. | `allow()`, `deny()`, `pass()` | `player` |
+| `onExhausted(handler)` | `ExhaustedEvent` | The player reaches the exhaustion threshold. | `deltaExhaustion`, `deltaHunger`, `deltaSaturation`; cancelable | `currentExhaustionLevel`, `player` |
+| `onExhaustingAction(handler)` | `ExhaustingActionEvent` | The player performs an exhausting action. | `deltaExhaustion` | `action`, `player` |
+| `onGetMaxExhaustion(handler)` | `GetMaxExhaustionEvent` | AppleCore retrieves maximum exhaustion. | `maxExhaustionLevel` | `player` |
+| `onGetMaxHunger(handler)` | `GetMaxHungerEvent` | AppleCore retrieves maximum hunger. | `maxHunger` | `player` |
+| `onAllowStarvation(handler)` | `AllowStarvationEvent` | AppleCore checks whether starvation is allowed. | `allow()`, `deny()`, `pass()` | `player` |
+| `onGetStarveTickPeriod(handler)` | `GetStarveTickPeriodEvent` | AppleCore retrieves the starvation interval. | `starveTickPeriod` | `player` |
+| `onStarve(handler)` | `StarveEvent` | Starvation is about to deal damage. | `starveDamage`; cancelable | `player` |
+| `onAllowRegen(handler)` | `AllowRegenEvent` | AppleCore checks normal regeneration. | `allow()`, `deny()`, `pass()` | `player` |
+| `onAllowSaturatedRegen(handler)` | `AllowSaturatedRegenEvent` | AppleCore checks saturation regeneration. | `allow()`, `deny()`, `pass()` | `player` |
+| `onGetRegenTickPeriod(handler)` | `GetRegenTickPeriodEvent` | AppleCore retrieves normal regeneration interval. | `regenTickPeriod` | `player` |
+| `onGetSaturatedRegenTickPeriod(handler)` | `GetSaturatedRegenTickPeriodEvent` | AppleCore retrieves saturation regeneration interval. | `regenTickPeriod` | `player` |
+| `onPeacefulRegen(handler)` | `PeacefulRegenEvent` | Peaceful-mode health regeneration occurs. | `deltaHealth`; cancelable | `player` |
+| `onPeacefulHungerRegen(handler)` | `PeacefulHungerRegenEvent` | Hunger is added by peaceful-mode regeneration. | `deltaHunger`; cancelable | `player` |
+| `onRegen(handler)` | `RegenEvent` | Normal health regeneration occurs. | `deltaHealth`, `deltaExhaustion`; cancelable | `player` |
+| `onSaturatedRegen(handler)` | `SaturatedRegenEvent` | Saturation-based health regeneration occurs. | `deltaHealth`, `deltaExhaustion`; cancelable | `player` |
+
+`Allow...Event` handlers use `event.allow()`, `event.deny()`, or `event.pass()`. `pass()` restores AppleCore/Vanilla decision-making. Event fields such as `hunger`, `maxHunger`, `deltaHealth`, and `starveDamage` are assigned directly.
+
+Example:
+
+```zenscript
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.GetFoodValuesEvent;
+import mods.hungertweaker.events.StarveEvent;
+
+HungerEvents.onGetFoodValues(function(event as GetFoodValuesEvent) {
+    if (event.food == <minecraft:apple>) {
+        event.hunger = event.unmodifiedHunger + 2;
+        event.saturationModifier = event.unmodifiedSaturationModifier;
+    }
+});
+
+HungerEvents.onStarve(function(event as StarveEvent) {
+    event.starveDamage = 0;
+});
+```
+
+### Expressions
+
+An expression is a string evaluated by HungerTweaker. It can use the previous value as `x`, so the same script can scale values supplied by Vanilla or another mod.
+
+| Syntax | Meaning |
+| --- | --- |
+| `+`, `-`, `*`, `/`, `^` | Addition, subtraction, multiplication, division, and exponentiation. |
+| `sqrt(value)` | Square root. |
+| `sin(value)`, `cos(value)`, `tan(value)` | Trigonometric functions; input is interpreted in degrees. |
+| `ceil(value)`, `round(value)` | Ceiling and nearest-integer rounding. |
+| `nextUp(value)`, `nextDown(value)` | The next representable floating-point value above or below the input. |
+| `random()` | Random number from `0` inclusive to `1` exclusive. |
+| `random(bounds)` | Random integer from `0` inclusive to `bounds` exclusive. |
+| `max(a, b)`, `min(a, b)` | Larger or smaller of two values. |
+| `clamp(value, min, max)` | Restricts a value to the inclusive range. |
+
+Use a quoted string when `x` must be evaluated at runtime. Use an unquoted CraftTweaker expression when the result can be calculated once while the script loads.
+
+```zenscript
+import mods.hungertweaker.Hunger;
+
+Hunger.setMaxHunger("x * 2"); // Dynamic: doubles the value currently supplied by AppleCore.
+Hunger.setMaxHunger(2 * 2);    // Static: CraftTweaker evaluates this once as 4.
+```
+
+`Hunger.setMaxHunger(x * 2)` is invalid because `x` is not a CraftTweaker variable. `Hunger.setMaxHunger("2 * 2")` is valid, but slower than using `2 * 2` because HungerTweaker parses and evaluates the string repeatedly.
 
 ## Compatibility CT API Reference
 
@@ -433,6 +630,3 @@ The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional 
 | `event.foodSpoilage` | `IData` map | Alias of `event.foodSpoiling`. |
 | `event.spoilage` | `float` | FoodSpoiling rot progress, or `0.0` when not loaded. |
 | `event.freshness` | `float` | FoodSpoiling freshness, or `1.0` when not loaded. |
-
-For a more complete overview, visit the HungerTweaker wiki.
-https://github.com/coolsquid/HungerTweaker/wiki/
