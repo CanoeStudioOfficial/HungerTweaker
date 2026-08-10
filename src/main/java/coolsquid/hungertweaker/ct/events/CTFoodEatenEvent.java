@@ -4,6 +4,8 @@ import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
 import coolsquid.hungertweaker.ct.compat.CTNutrition;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLife;
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
+import coolsquid.hungertweaker.ct.compat.CTSimpleDifficulty;
+import coolsquid.hungertweaker.ct.compat.CTToughAsNails;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.DataMap;
 import crafttweaker.api.data.IData;
@@ -103,6 +105,20 @@ public class CTFoodEatenEvent implements IPlayerEvent {
 	@ZenGetter("freshness")
 	public float freshness() {
 		return CTFoodSpoiling.isLoaded() ? CTFoodSpoiling.getFreshness(this.internal.player, this.internal.food) : 1;
+	}
+
+	@ZenGetter("toughAsNails")
+	public IData toughAsNails() {
+		return CTToughAsNails.isLoaded()
+				? CTToughAsNails.getFoodData(CraftTweakerMC.getIItemStack(this.internal.food))
+				: DataMap.EMPTY;
+	}
+
+	@ZenGetter("simpleDifficulty")
+	public IData simpleDifficulty() {
+		return CTSimpleDifficulty.isLoaded()
+				? CTSimpleDifficulty.getFoodData(CraftTweakerMC.getIItemStack(this.internal.food))
+				: DataMap.EMPTY;
 	}
 
 	@Override

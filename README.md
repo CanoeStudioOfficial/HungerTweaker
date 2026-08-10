@@ -8,8 +8,10 @@ As part of the unofficial maintenance work, the Community Edition adds optional 
 - The Spice of Life integration: reads the current diminishing-return modifier, food groups, food-group configuration, food history, eaten-food counts, and total food values. Scripts can add or reset history, validate and synchronize it, inspect food-group matches, and respond when food is eaten.
 - Spice of Life: Carrot Edition integration: reads unique foods eaten, milestone progress, the next milestone, health modifiers, whitelist/blacklist results, and the full Carrot configuration. Scripts can add or clear foods, rebuild progress, update max health, synchronize the food list, and respond to Carrot Edition food-eaten events.
 - FoodSpoiling integration: reads rot state, expiration, lifetime, remaining ticks, spoilage, freshness, container lifetime factors, and stack timing data. It also provides helpers for calculating spoilage-adjusted saturation. Its food-values event fires during AppleCore food-value calculation, allowing scripts to adjust hunger and saturation based on the current spoilage state; FoodSpoiling's own configuration remains the source of the spoilage rules.
+- Tough As Nails integration: exposes TAN thirst, hydration, exhaustion, temperature, temperature ranges, external temperature modifiers, gameplay switches, water types, and configured drink data. It also provides a TAN drink-finished event.
+- SimpleDifficulty integration: exposes SD thirst and temperature capabilities, temperature targets and world temperatures, temporary modifiers, armor temperature NBT helpers, thirst types, configured consumable data, drink helpers, and the complete runtime `JsonConfig` registration surface. It also provides an SD drink-finished event.
 
-These integrations are optional and are only active when their corresponding mod is loaded. The Nutrition integration supports branches and forks that preserve the expected `ca.wescook.nutrition` package layout and public API. The README includes the required imports, complete method signatures, parameter and return-value meanings, event timing, and practical examples for developers.
+These integrations are optional and are only active when their corresponding mod is loaded. TAN and SimpleDifficulty are independent: loading one never requires or converts the other's data. The Nutrition integration supports branches and forks that preserve the expected `ca.wescook.nutrition` package layout and public API. The README includes the required imports, complete method signatures, parameter and return-value meanings, event timing, and practical examples for developers.
 
 The project consists of two parts. Firstly, it includes a simplified wrapper around the AppleCore API. This can be used to set a variety of default values, as well as modify the [properties of food items](#foodvalues). Secondly, it provides access to most of AppleCore's [events](#core-events). This can be used to dynamically modify and react to changes in a player's hunger, exhaustion, starvation, and regen.
 
@@ -280,6 +282,8 @@ Returned `IData` maps use plain string keys:
 | Carrot Edition config | `milestones`, `baseHearts`, `heartsPerMilestone`, `shouldShowUneatenFoods`, `minimumFoodValue`, `blacklist`, `whitelist`, `hasWhitelist`. |
 | Carrot Edition food data | `hasEaten`, `shouldCount`, `isAllowed`, `isHearty`, `progress`. |
 | FoodSpoiling data | `rotState`, `canSpoil`, `doesNotRot`, `hasExpiration`, `expirationDays`, `baseTicksToRot`, `ticksToRot`, `remainingTicks`, `elapsedTicks`, `spoilage`, `freshness`, `saturationMultiplier`, `lifetimeFactor`, `hasCreationTime`, `creationTime`, `hasRemainingLifetime`, `remainingLifetime`, `hasLastLifetimeFactor`, `lastLifetimeFactor`, `hasID`, `id`. |
+| TAN drink data | `matched`, `source`, `thirst`, `hydration`, `poisonChance`. |
+| SD food data | `thirst`, `temperature`; each nested map reports whether a matching SD JSON entry exists. |
 
 Useful imports for scripts:
 
@@ -288,11 +292,15 @@ import mods.hungertweaker.Nutrition;
 import mods.hungertweaker.SpiceOfLife;
 import mods.hungertweaker.SpiceOfLifeCarrotEdition;
 import mods.hungertweaker.FoodSpoiling;
+import mods.hungertweaker.ToughAsNails;
+import mods.hungertweaker.SimpleDifficulty;
 import mods.hungertweaker.events.HungerEvents;
 import mods.hungertweaker.events.NutritionFoodEatenEvent;
 import mods.hungertweaker.events.SpiceOfLifeFoodEatenEvent;
 import mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent;
 import mods.hungertweaker.events.FoodSpoilingFoodValuesEvent;
+import mods.hungertweaker.events.ToughAsNailsDrinkEvent;
+import mods.hungertweaker.events.SimpleDifficultyDrinkEvent;
 ```
 
 ### Nutrition
@@ -519,6 +527,173 @@ HungerEvents.onFoodSpoilingSaturation(function(event as FoodSpoilingFoodValuesEv
 });
 ```
 
+### Tough As Nails
+
+Zen class: `mods.hungertweaker.ToughAsNails`
+
+Every method other than `isLoaded()` requires Tough As Nails to be loaded. `player` is a CT `IPlayer`; numeric thirst values are TAN thirst points, hydration and exhaustion are TAN's native floating-point values, and temperature is the raw TAN scale from `0` to `25` in the reference version.
+
+Status and configuration:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `isLoaded()` | none | `bool` | Whether TAN is loaded. |
+| `isThirstEnabled()` | none | `bool` | TAN `Enable Thirst` gameplay switch. |
+| `isTemperatureEnabled()` | none | `bool` | TAN `Enable Body Temperature` gameplay switch. |
+| `isPeacefulEnabled()` | none | `bool` | TAN `Enable Peaceful` gameplay switch. |
+| `isWorldDrinkingEnabled()` | none | `bool` | Whether drinking from water blocks is enabled. |
+| `isRainDrinkingEnabled()` | none | `bool` | Whether drinking from rain is enabled. |
+
+Player thirst:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `getThirst(player)` | `IPlayer player` | `int` | Current TAN thirst points. |
+| `setThirst(player, thirst)` | `IPlayer player`, `int thirst` | `void` | Sets thirst to an absolute value. |
+| `addThirst(player, amount)` | `IPlayer player`, `int amount` | `void` | Adds a relative thirst amount. |
+| `getHydration(player)` | `IPlayer player` | `float` | Current hydration buffer. |
+| `setHydration(player, hydration)` | `IPlayer player`, `float hydration` | `void` | Sets the hydration buffer. |
+| `addHydration(player, amount)` | `IPlayer player`, `float amount` | `void` | Adds to the hydration buffer. |
+| `getThirstExhaustion(player)` | `IPlayer player` | `float` | Current TAN thirst exhaustion. |
+| `setThirstExhaustion(player, exhaustion)` | `IPlayer player`, `float exhaustion` | `void` | Sets thirst exhaustion. |
+| `addThirstExhaustion(player, amount)` | `IPlayer player`, `float amount` | `void` | Adds thirst exhaustion. |
+| `addThirstStats(player, thirst, hydration)` | `IPlayer player`, `int thirst`, `float hydration` | `void` | Calls TAN's native combined stat update. |
+| `getThirstChangeTime(player)` | `IPlayer player` | `int` | TAN thirst change timer. |
+| `setThirstChangeTime(player, ticks)` | `IPlayer player`, `int ticks` | `void` | Sets the thirst change timer. |
+| `isThirsty(player)` | `IPlayer player` | `bool` | Whether TAN considers the player below maximum thirst. |
+| `getThirstData(player)` | `IPlayer player` | `IData` map | Map with `thirst`, `hydration`, `exhaustion`, and `changeTime`. |
+
+Player temperature:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `getTemperature(player)` | `IPlayer player` | `int` | Current raw body temperature. |
+| `setTemperature(player, temperature)` | `IPlayer player`, `int temperature` | `void` | Sets raw body temperature after clamping to TAN's scale. |
+| `addTemperature(player, amount)` | `IPlayer player`, `int amount` | `void` | Adds a signed temperature difference. |
+| `getPlayerTargetTemperature(player)` | `IPlayer player` | `int` | TAN's calculated target temperature. |
+| `getTemperatureChangeTime(player)` | `IPlayer player` | `int` | TAN temperature change timer. |
+| `setTemperatureChangeTime(player, ticks)` | `IPlayer player`, `int ticks` | `void` | Sets the temperature change timer. |
+| `applyTemperatureModifier(player, name, amount, rate, duration)` | `IPlayer player`, `string name`, `int amount`, `int rate`, `int duration` | `void` | Adds or refreshes TAN's named external modifier. |
+| `hasTemperatureModifier(player, name)` | `IPlayer player`, `string name` | `bool` | Whether the named external modifier exists. |
+| `getTemperatureModifiers(player)` | `IPlayer player` | `IData` map | Map of modifier name to `name`, `amount`, `rate`, and `endTime`. |
+| `getTemperatureData(player)` | `IPlayer player` | `IData` map | Map with `temperature`, `range`, `targetTemperature`, `changeTime`, and `modifiers`. |
+
+Temperature ranges and drinks:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `clampTemperature(temperature)` | `int temperature` | `int` | Clamps a raw temperature to TAN's current scale. |
+| `getTemperatureScaleTotal()` | none | `int` | Maximum raw scale value. |
+| `getTemperatureScaleMidpoint()` | none | `int` | Midpoint of the raw scale. |
+| `getTemperatureRanges()` | none | `string[]` | Names such as `ICY`, `COOL`, `MILD`, `WARM`, and `HOT`. |
+| `getTemperatureRange(temperature)` | `int temperature` | `string` | Range name for a raw temperature, or `UNKNOWN` outside the scale. |
+| `getTemperatureRangeInfo(rangeName)` | `string rangeName` | `IData` map | Range map with `name`, `lowerBound`, `upperBound`, `middle`, and `size`. |
+| `getWaterTypes()` | none | `string[]` | TAN water types, including `NORMAL`, `PURIFIED`, and `RAIN`. |
+| `getWaterTypeInfo(typeName)` | `string typeName` | `IData` map | Water drink map with `thirst`, `hydration`, and `poisonChance`. |
+| `getDrinkData(food)` | `IItemStack food` | `IData` map | Reads matching TAN item/config/potion drink data. `source` is `item`, `config`, `potion`, or `none`. |
+| `getFoodData(food)` | `IItemStack food` | `IData` map | Alias for `getDrinkData`; useful from shared food events. |
+| `drink(player, thirst, hydration)` | `IPlayer player`, `int thirst`, `float hydration` | `void` | Calls TAN's `IThirst.addStats`; it does not apply poison effects. |
+
+Example with explicit imports and parameters:
+
+```zenscript
+import mods.hungertweaker.ToughAsNails;
+
+if (ToughAsNails.isLoaded()) {
+    ToughAsNails.addThirst(player, -2); // player: IPlayer, amount: int
+    ToughAsNails.addHydration(player, 0.25); // amount: float
+    print("TAN temperature = " ~ ToughAsNails.getTemperature(player));
+    print("TAN range = " ~ ToughAsNails.getTemperatureRange(ToughAsNails.getTemperature(player)));
+}
+```
+
+### SimpleDifficulty
+
+Zen class: `mods.hungertweaker.SimpleDifficulty`
+
+Every method other than `isLoaded()` requires SimpleDifficulty to be loaded. SD thirst levels are integer thirst points, while saturation and exhaustion use SD's native floating-point values. Temperature levels are clamped to SD's `0..25` scale. `IData properties` parameters are string maps, for example `{"burning": "true"}`.
+
+Status and player capabilities:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `isLoaded()` | none | `bool` | Whether SD is loaded. |
+| `isThirstEnabled()` | none | `bool` | SD server thirst switch. |
+| `isTemperatureEnabled()` | none | `bool` | SD server temperature switch. |
+| `getThirstLevel(player)`, `setThirstLevel(player, thirst)`, `addThirstLevel(player, amount)` | `IPlayer player`; setters also take `int thirst` or `int amount` | `int` / `void` | Reads or changes the thirst level. |
+| `getThirstSaturation(player)`, `setThirstSaturation(player, saturation)`, `addThirstSaturation(player, amount)` | `IPlayer player`; setters also take `float saturation` or `float amount` | `float` / `void` | Reads or changes thirst saturation. |
+| `getThirstExhaustion(player)`, `setThirstExhaustion(player, exhaustion)`, `addThirstExhaustion(player, amount)` | `IPlayer player`; setters also take `float exhaustion` or `float amount` | `float` / `void` | Reads or changes thirst exhaustion. |
+| `getThirstTickTimer(player)`, `setThirstTickTimer(player, ticks)`, `addThirstTickTimer(player, ticks)` | `IPlayer player`; setters also take `int ticks` | `int` / `void` | Reads or changes SD's thirst tick timer. |
+| `getThirstDamageCounter(player)`, `setThirstDamageCounter(player, value)`, `addThirstDamageCounter(player, value)` | `IPlayer player`; setters also take `int value` | `int` / `void` | Reads or changes the thirst damage counter. |
+| `isThirsty(player)` | `IPlayer player` | `bool` | SD capability's `isThirsty()` result. |
+| `getThirstData(player)` | `IPlayer player` | `IData` map | Map with `level`, `saturation`, `exhaustion`, `tickTimer`, `damageCounter`, and `isThirsty`. |
+
+Temperature and temporary modifiers:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `getTemperatureLevel(player)`, `setTemperatureLevel(player, temperature)`, `addTemperatureLevel(player, amount)` | `IPlayer player`; setters also take `int temperature` or `int amount` | `int` / `void` | Reads or changes the clamped SD temperature level. |
+| `getTemperatureTickTimer(player)`, `setTemperatureTickTimer(player, ticks)`, `addTemperatureTickTimer(player, ticks)` | `IPlayer player`; setters also take `int ticks` | `int` / `void` | Reads or changes the temperature tick timer. |
+| `getTemperatureDamageCounter(player)`, `setTemperatureDamageCounter(player, value)`, `addTemperatureDamageCounter(player, value)` | `IPlayer player`; setters also take `int value` | `int` / `void` | Reads or changes the temperature damage counter. |
+| `getTemperatureEnum(temperature)` | `int temperature` | `string` | Returns `FREEZING`, `COLD`, `NORMAL`, `HOT`, or `BURNING`. |
+| `getTemperatureEnumInfo(name)` | `string name` | `IData` map | Range map with `name`, `lowerBound`, `upperBound`, and `middle`. |
+| `getTemperatureEnums()` | none | `string[]` | All SD temperature category names. |
+| `getPlayerTargetTemperature(player)` | `IPlayer player` | `int` | Calculated target temperature, not the current capability level. |
+| `getWorldTemperature(player)` | `IPlayer player` | `int` | World temperature at the player's position. |
+| `getWorldTemperature(player, x, y, z)` | `IPlayer player`, `int x`, `int y`, `int z` | `int` | World temperature at a coordinate in the player's dimension. |
+| `getTemperatureData(player)` | `IPlayer player` | `IData` map | Map with `level`, `enum`, `tickTimer`, `damageCounter`, and `temporaryModifiers`. |
+| `getTemporaryModifiers(player)` | `IPlayer player` | `IData` map | Map of modifier name to `temperature` and `duration`. |
+| `setTemporaryModifier(player, name, temperature, duration)` | `IPlayer player`, `string name`, `float temperature`, `int duration` | `void` | Adds or replaces one SD temporary modifier. |
+| `clearTemporaryModifiers(player)` | `IPlayer player` | `void` | Removes all temporary modifiers. |
+| `setArmorTemperature(stack, temperature)` | `IItemStack stack`, `float temperature` | `void` | Writes SD's armor temperature NBT tag. |
+| `getArmorTemperature(stack)` | `IItemStack stack` | `float` | Reads the armor temperature tag, or SD's missing-tag default. |
+| `removeArmorTemperature(stack)` | `IItemStack stack` | `void` | Removes SD's armor temperature tag. |
+
+Thirst types and configured consumables:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `getThirstTypes()` | none | `string[]` | Names such as `NORMAL`, `SALT`, `RAIN`, `POTION`, and `PURIFIED`. |
+| `getThirstTypeInfo(name)` | `string name` | `IData` map | Type map with `name`, `id`, `thirst`, `saturation`, and `thirstyChance`. |
+| `takeDrink(player, thirst, saturation, thirstyChance)` | `IPlayer player`, `int thirst`, `float saturation`, `float thirstyChance` | `void` | Calls SD's native drink helper with all values. Chance is `0.0..1.0`. |
+| `takeDrink(player, thirst, saturation)` | `IPlayer player`, `int thirst`, `float saturation` | `void` | Calls SD's drink helper with no dirty/thirsty chance. |
+| `takeDrink(player, thirstType)` | `IPlayer player`, `string thirstType` | `void` | Uses a named SD `ThirstEnum`; names are case-insensitive. |
+| `getConsumableThirst(food)` | `IItemStack food` | `IData` map | Reads the first matching SD consumable thirst JSON entry. |
+| `getConsumableTemperature(food)` | `IItemStack food` | `IData` map | Reads the first matching SD consumable temperature JSON entry. |
+| `getFoodData(food)` | `IItemStack food` | `IData` map | Combined map with nested `thirst` and `temperature` config data. |
+
+Runtime `JsonConfig` registration:
+
+| Method | Parameters | Returns | Meaning |
+| --- | --- | --- | --- |
+| `registerArmorTemperature(stack, temperature)` | `IItemStack stack`, `float temperature` | `void` | Registers armor temperature using the stack's item/metadata. |
+| `registerArmorTemperatureByName(registryName, temperature[, metadata[, nbt]])` | `string registryName`, `float temperature`, optional `int metadata`, optional `string nbt` | `void` | Registers armor temperature by registry name. Omitted metadata is `-1`; omitted NBT is unrestricted. |
+| `registerBlockTemperature(registryName, temperature)` | `string registryName`, `float temperature` | `bool` | Registers a block temperature without block properties. The boolean is SD's replacement result. |
+| `registerBlockTemperatureWithProperties(registryName, temperature, properties)` | `string registryName`, `float temperature`, `IData properties` | `bool` | Registers a block temperature for an exact property map. |
+| `registerFluidTemperature(fluidName, temperature)` | `string fluidName`, `float temperature` | `void` | Registers a fluid temperature. |
+| `registerConsumableTemperature(group, food, temperature, duration)` | `string group`, `IItemStack food`, `float temperature`, `int duration` | `void` | Registers a consumable temporary temperature effect. |
+| `registerConsumableTemperatureByName(group, registryName, temperature, duration[, metadata[, nbt]])` | `string group`, `string registryName`, `float temperature`, `int duration`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the consumable temperature registration. |
+| `registerConsumableThirst(food, amount, saturation, thirstyChance)` | `IItemStack food`, `int amount`, `float saturation`, `float thirstyChance` | `void` | Registers an item thirst entry. |
+| `registerConsumableThirstByName(registryName, amount, saturation, thirstyChance[, metadata[, nbt]])` | `string registryName`, `int amount`, `float saturation`, `float thirstyChance`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the consumable thirst registration. |
+| `registerHeldItem(stack, temperature)` | `IItemStack stack`, `float temperature` | `void` | Registers temperature for a held item. |
+| `registerHeldItemByName(registryName, temperature[, metadata[, nbt]])` | `string registryName`, `float temperature`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the held-item registration. |
+| `registerDimensionTemperature(dimension, temperature)` | `int dimension`, `float temperature` | `void` | Registers a dimension temperature by numeric dimension id. |
+| `registerDimensionTemperatureByName(dimension, temperature)` | `string dimension`, `float temperature` | `void` | String form of dimension registration. |
+
+Example with SD JSON registration parameters:
+
+```zenscript
+import mods.hungertweaker.SimpleDifficulty;
+
+if (SimpleDifficulty.isLoaded()) {
+    SimpleDifficulty.registerConsumableThirst(<minecraft:milk_bucket>, 8, 0.5, 0.0);
+    SimpleDifficulty.registerConsumableTemperatureByName("drink", "minecraft:milk_bucket", -1.0, 1200, -1);
+    SimpleDifficulty.registerBlockTemperatureWithProperties(
+        "minecraft:campfire", 6.0, {"burning": "true"}
+    );
+}
+```
+
 ### Compatibility Events
 
 Zen class: `mods.hungertweaker.events.HungerEvents`
@@ -532,6 +707,10 @@ Zen class: `mods.hungertweaker.events.HungerEvents`
 | `onSOLCarrotFoodEaten(handler)` | Same as above | Short alias for Carrot Edition. | Same as above. |
 | `onFoodSpoilingFoodValues(handler)` | `mods.hungertweaker.events.FoodSpoilingFoodValuesEvent` | AppleCore `GetPlayerFoodValues` fires and FoodSpoiling is loaded. | FoodSpoiling rot data plus writable `hunger` and `saturationModifier`. |
 | `onFoodSpoilingSaturation(handler)` | Same as above | Alias for FoodSpoiling saturation handling. | Same as above. |
+| `onToughAsNailsDrink(handler)` | `mods.hungertweaker.events.ToughAsNailsDrinkEvent` | A server-side `LivingEntityUseItemEvent.Finish` matches a TAN drink and TAN is loaded. | Finished `food`, `player`, TAN `drink` data, and current thirst stats. |
+| `onTANDrink(handler)` | Same as above | Alias for TAN drink handling. | Same as above. |
+| `onSimpleDifficultyDrink(handler)` | `mods.hungertweaker.events.SimpleDifficultyDrinkEvent` | A server-side `LivingEntityUseItemEvent.Finish` matches an SD drink and SD is loaded. | Finished `food`, `player`, SD `drink` data, and current thirst stats. |
+| `onSDDrink(handler)` | Same as above | Alias for SD drink handling. | Same as above. |
 
 Each registration method takes one `handler` parameter. In ZenScript, pass a function with one event argument:
 
@@ -544,7 +723,7 @@ HungerEvents.onNutritionFoodEaten(function(event as NutritionFoodEatenEvent) {
 });
 ```
 
-Inheritance note: `NutritionFoodEatenEvent`, `SpiceOfLifeFoodEatenEvent`, and `SpiceOfLifeCarrotFoodEatenEvent` all inherit the shared `FoodEatenEvent` getters, while `FoodSpoilingFoodValuesEvent` inherits the shared `GetFoodValuesEvent` getters. The event-specific tables below only apply to that event family.
+Inheritance note: `NutritionFoodEatenEvent`, `SpiceOfLifeFoodEatenEvent`, and `SpiceOfLifeCarrotFoodEatenEvent` all inherit the shared `FoodEatenEvent` getters, while `FoodSpoilingFoodValuesEvent` inherits the shared `GetFoodValuesEvent` getters. `ToughAsNailsDrinkEvent` and `SimpleDifficultyDrinkEvent` inherit `player` and `food` from the shared drink event base. The event-specific tables below only apply to that event family.
 
 The Nutrition, The Spice of Life, and Carrot Edition food-eaten compatibility events extend `FoodEatenEvent`, so they also have the normal food eaten getters:
 
@@ -638,3 +817,45 @@ The normal `FoodEatenEvent` and `GetFoodValuesEvent` also expose these optional 
 | `event.foodSpoilage` | `IData` map | Alias of `event.foodSpoiling`. |
 | `event.spoilage` | `float` | FoodSpoiling rot progress, or `0.0` when not loaded. |
 | `event.freshness` | `float` | FoodSpoiling freshness, or `1.0` when not loaded. |
+| `event.toughAsNails` | `IData` map | TAN drink data for this food, or empty map when TAN is not loaded. |
+| `event.simpleDifficulty` | `IData` map | SD configured thirst and temperature data for this food, or empty map when SD is not loaded. |
+
+`ToughAsNailsDrinkEvent` extra API:
+
+| Getter | Type | Meaning |
+| --- | --- | --- |
+| `event.player` | `IPlayer` | Player who finished using the drink. |
+| `event.food` | `IItemStack` | Item stack from the finished-use event. |
+| `event.drink` | `IData` map | TAN drink map with `matched`, `source`, `thirst`, `hydration`, and `poisonChance`. |
+| `event.thirst` | `int` | Current TAN thirst after the finish event. |
+| `event.hydration` | `float` | Current TAN hydration after the finish event. |
+| `event.exhaustion` | `float` | Current TAN thirst exhaustion after the finish event. |
+
+`SimpleDifficultyDrinkEvent` extra API:
+
+| Getter | Type | Meaning |
+| --- | --- | --- |
+| `event.player` | `IPlayer` | Player who finished using the drink. |
+| `event.food` | `IItemStack` | Item stack from the finished-use event. |
+| `event.drink` | `IData` map | Matching SD consumable thirst map with `matched`, `thirst`, `saturation`, `thirstyChance`, and `identity`. |
+| `event.thirstLevel` | `int` | Current SD thirst level after the finish event. |
+| `event.saturation` | `float` | Current SD thirst saturation after the finish event. |
+| `event.exhaustion` | `float` | Current SD thirst exhaustion after the finish event. |
+
+Drink event example:
+
+```zenscript
+import mods.hungertweaker.events.HungerEvents;
+import mods.hungertweaker.events.ToughAsNailsDrinkEvent;
+import mods.hungertweaker.events.SimpleDifficultyDrinkEvent;
+
+HungerEvents.onToughAsNailsDrink(function(event as ToughAsNailsDrinkEvent) {
+    print("TAN drink source = " ~ event.drink.source);
+});
+
+HungerEvents.onSimpleDifficultyDrink(function(event as SimpleDifficultyDrinkEvent) {
+    if (event.drink.matched) {
+        print("SD thirst after drink = " ~ event.thirstLevel);
+    }
+});
+```
