@@ -1,5 +1,6 @@
 package coolsquid.hungertweaker;
 
+import coolsquid.hungertweaker.ct.compat.CTToughAsNails;
 import coolsquid.hungertweaker.ct.compat.CTNutrition;
 import coolsquid.hungertweaker.ct.events.CTSimpleDifficultyEventHandler;
 import coolsquid.hungertweaker.ct.events.CTToughAsNailsEventHandler;
@@ -31,6 +32,11 @@ public class HungerTweaker {
 		// properly when scripts are executed
 		MinecraftForge.EVENT_BUS.register(new ModEventHandler());
 		if (Loader.isModLoaded("toughasnails")) {
+			try {
+				CTToughAsNails.registerIfLoaded();
+			} catch (LinkageError e) {
+				LOGGER.warn("Tough As Nails CT integration was not registered because its API is incompatible.", e);
+			}
 			MinecraftForge.EVENT_BUS.register(new CTToughAsNailsEventHandler());
 		}
 		if (Loader.isModLoaded("simpledifficulty")) {
@@ -44,4 +50,5 @@ public class HungerTweaker {
 			CTNutrition.applyQueuedFoodChanges();
 		}
 	}
+
 }

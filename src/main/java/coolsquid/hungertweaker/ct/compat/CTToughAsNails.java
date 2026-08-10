@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -38,13 +38,21 @@ import toughasnails.config.json.DrinkData;
 import toughasnails.init.ModConfig;
 import toughasnails.temperature.modifier.TemperatureModifier.ExternalModifier;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.ToughAsNails")
 public class CTToughAsNails {
 
 	public static final String MODID = "toughasnails";
 
 	private CTToughAsNails() {
+	}
+
+	/**
+	 * Registered after Forge has loaded TAN so CraftTweaker cannot scan this optional class too early.
+	 */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTToughAsNails.class);
+		}
 	}
 
 	@ZenMethod
