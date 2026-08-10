@@ -594,24 +594,28 @@ Temperature ranges and drinks:
 | `getFoodData(food)` | `IItemStack food` | `IData` map | Alias for `getDrinkData`; useful from shared food events. |
 | `drink(player, thirst, hydration)` | `IPlayer player`, `int thirst`, `float hydration` | `void` | Calls TAN's `IThirst.addStats`; it does not apply poison effects. |
 
-Example with explicit imports and parameters:
+Example with explicit imports and parameters. When TAN is part of the modpack, the standard
+form is to call the API directly:
 
 ```zenscript
 import mods.hungertweaker.ToughAsNails;
 
-if (ToughAsNails.isLoaded()) {
-    ToughAsNails.addThirst(player, -2); // player: IPlayer, amount: int
-    ToughAsNails.addHydration(player, 0.25); // amount: float
-    print("TAN temperature = " ~ ToughAsNails.getTemperature(player));
-    print("TAN range = " ~ ToughAsNails.getTemperatureRange(ToughAsNails.getTemperature(player)));
-}
+ToughAsNails.addThirst(player, -2); // player: IPlayer, amount: int
+ToughAsNails.addHydration(player, 0.25); // amount: float
+print("TAN temperature = " ~ ToughAsNails.getTemperature(player));
+print("TAN range = " ~ ToughAsNails.getTemperatureRange(ToughAsNails.getTemperature(player)));
 ```
 
 ### SimpleDifficulty
 
 Zen class: `mods.hungertweaker.SimpleDifficulty`
 
-Every method other than `isLoaded()` requires SimpleDifficulty to be loaded. SD thirst levels are integer thirst points, while saturation and exhaustion use SD's native floating-point values. Temperature levels are clamped to SD's `0..25` scale. `IData properties` parameters are string maps, for example `{"burning": "true"}`.
+Every method other than `isLoaded()` requires SimpleDifficulty to be loaded. When SD is part of
+the modpack, call these methods directly using the normal `mods.hungertweaker.SimpleDifficulty`
+namespace. Use `isLoaded()` only when one script must also run without SD. SD thirst levels are
+integer thirst points, while saturation and exhaustion use SD's native floating-point values.
+Temperature levels are clamped to SD's `0..25` scale. `IData properties` parameters are string
+maps, for example `{"burning": "true"}`.
 
 Status and player capabilities:
 
@@ -692,17 +696,15 @@ Example with SD JSON registration parameters:
 ```zenscript
 import mods.hungertweaker.SimpleDifficulty;
 
-if (SimpleDifficulty.isLoaded()) {
-    // Any item can be registered; this example makes an apple restore thirst.
-    SimpleDifficulty.registerConsumableThirst(<minecraft:apple>, 4, 0.5, 0.0);
-    SimpleDifficulty.registerConsumableThirstByName(
-        "minecraft:milk_bucket", 8, 0.5, 0.0, -1, null
-    );
-    SimpleDifficulty.registerConsumableTemperatureByName("drink", "minecraft:milk_bucket", -1.0, 1200, -1);
-    SimpleDifficulty.registerBlockTemperatureWithProperties(
-        "minecraft:campfire", 6.0, {"burning": "true"}
-    );
-}
+// Any item can be registered; this example makes an apple restore thirst.
+SimpleDifficulty.registerConsumableThirst(<minecraft:apple>, 4, 0.5, 0.0);
+SimpleDifficulty.registerConsumableThirstByName(
+    "minecraft:milk_bucket", 8, 0.5, 0.0, -1, null
+);
+SimpleDifficulty.registerConsumableTemperatureByName("drink", "minecraft:milk_bucket", -1.0, 1200, -1);
+SimpleDifficulty.registerBlockTemperatureWithProperties(
+    "minecraft:campfire", 6.0, {"burning": "true"}
+);
 ```
 
 ### Compatibility Events
