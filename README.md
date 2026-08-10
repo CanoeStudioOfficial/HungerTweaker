@@ -664,6 +664,13 @@ Thirst types and configured consumables:
 
 Runtime `JsonConfig` registration:
 
+`registerConsumableThirst` can register thirst values for **any registered item**, not only
+SimpleDifficulty's built-in drinks. The item is matched by registry name, with optional
+metadata and NBT restrictions. The registration is applied when the item finishes a normal
+item-use action (`LivingEntityUseItemEvent.Finish`), so registering a non-consumable item does
+not automatically make it edible or usable. Give that item its own food/drink/use behavior if
+it cannot already be consumed.
+
 | Method | Parameters | Returns | Meaning |
 | --- | --- | --- | --- |
 | `registerArmorTemperature(stack, temperature)` | `IItemStack stack`, `float temperature` | `void` | Registers armor temperature using the stack's item/metadata. |
@@ -673,8 +680,8 @@ Runtime `JsonConfig` registration:
 | `registerFluidTemperature(fluidName, temperature)` | `string fluidName`, `float temperature` | `void` | Registers a fluid temperature. |
 | `registerConsumableTemperature(group, food, temperature, duration)` | `string group`, `IItemStack food`, `float temperature`, `int duration` | `void` | Registers a consumable temporary temperature effect. |
 | `registerConsumableTemperatureByName(group, registryName, temperature, duration[, metadata[, nbt]])` | `string group`, `string registryName`, `float temperature`, `int duration`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the consumable temperature registration. |
-| `registerConsumableThirst(food, amount, saturation, thirstyChance)` | `IItemStack food`, `int amount`, `float saturation`, `float thirstyChance` | `void` | Registers an item thirst entry. |
-| `registerConsumableThirstByName(registryName, amount, saturation, thirstyChance[, metadata[, nbt]])` | `string registryName`, `int amount`, `float saturation`, `float thirstyChance`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the consumable thirst registration. |
+| `registerConsumableThirst(food, amount, saturation, thirstyChance)` | `IItemStack food`, `int amount`, `float saturation`, `float thirstyChance` | `void` | Registers thirst for any registered item stack. The item must still be usable/consumable to trigger SD's finish event. |
+| `registerConsumableThirstByName(registryName, amount, saturation, thirstyChance[, metadata[, nbt]])` | `string registryName`, `int amount`, `float saturation`, `float thirstyChance`, optional `int metadata`, optional `string nbt` | `void` | Registers thirst for any item by registry name, optionally restricted by metadata and NBT. |
 | `registerHeldItem(stack, temperature)` | `IItemStack stack`, `float temperature` | `void` | Registers temperature for a held item. |
 | `registerHeldItemByName(registryName, temperature[, metadata[, nbt]])` | `string registryName`, `float temperature`, optional `int metadata`, optional `string nbt` | `void` | Registry-name version of the held-item registration. |
 | `registerDimensionTemperature(dimension, temperature)` | `int dimension`, `float temperature` | `void` | Registers a dimension temperature by numeric dimension id. |
@@ -686,7 +693,11 @@ Example with SD JSON registration parameters:
 import mods.hungertweaker.SimpleDifficulty;
 
 if (SimpleDifficulty.isLoaded()) {
-    SimpleDifficulty.registerConsumableThirst(<minecraft:milk_bucket>, 8, 0.5, 0.0);
+    // Any item can be registered; this example makes an apple restore thirst.
+    SimpleDifficulty.registerConsumableThirst(<minecraft:apple>, 4, 0.5, 0.0);
+    SimpleDifficulty.registerConsumableThirstByName(
+        "minecraft:milk_bucket", 8, 0.5, 0.0, -1, null
+    );
     SimpleDifficulty.registerConsumableTemperatureByName("drink", "minecraft:milk_bucket", -1.0, 1200, -1);
     SimpleDifficulty.registerBlockTemperatureWithProperties(
         "minecraft:campfire", 6.0, {"burning": "true"}
