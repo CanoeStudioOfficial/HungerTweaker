@@ -1,13 +1,11 @@
 package coolsquid.hungertweaker.ct.events;
 
 import coolsquid.hungertweaker.ct.compat.CTSimpleDifficulty;
-import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.events.SimpleDifficultyDrinkEvent")
 public class CTSimpleDifficultyDrinkEvent extends CTDrinkEvent {
 

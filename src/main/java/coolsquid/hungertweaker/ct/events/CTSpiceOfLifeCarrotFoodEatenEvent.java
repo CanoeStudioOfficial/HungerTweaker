@@ -1,7 +1,6 @@
 package coolsquid.hungertweaker.ct.events;
 
 import coolsquid.hungertweaker.ct.compat.CTSpiceOfLifeCarrotEdition;
-import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import squeek.applecore.api.food.FoodEvent.FoodEaten;
@@ -9,7 +8,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.events.SpiceOfLifeCarrotFoodEatenEvent")
 public class CTSpiceOfLifeCarrotFoodEatenEvent extends CTFoodEatenEvent {
 

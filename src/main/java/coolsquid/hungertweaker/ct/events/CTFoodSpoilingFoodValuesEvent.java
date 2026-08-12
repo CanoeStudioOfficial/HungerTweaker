@@ -1,13 +1,11 @@
 package coolsquid.hungertweaker.ct.events;
 
 import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
-import crafttweaker.annotations.ZenRegister;
 import squeek.applecore.api.food.FoodEvent.GetPlayerFoodValues;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.events.FoodSpoilingFoodValuesEvent")
 public class CTFoodSpoilingFoodValuesEvent extends CTGetFoodValuesEvent {
 

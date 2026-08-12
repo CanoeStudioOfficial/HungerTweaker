@@ -33,15 +33,9 @@ public class CTExhaustion {
 	public static void setConstantExhaustionIncrease(IData v) {
 		constantExhaustionIncrease = v.asFloat();
 		if (constantExhaustionIncrease != 0) {
-			if (TickHandler.instance == null) {
-				TickHandler.instance = new TickHandler();
-				MinecraftForge.EVENT_BUS.register(TickHandler.instance);
-			}
+			coolsquid.hungertweaker.ct.CTHungerOverhaul.ensureTickHandler();
 		} else {
-			if (TickHandler.instance != null) {
-				MinecraftForge.EVENT_BUS.unregister(TickHandler.instance);
-				TickHandler.instance = null;
-			}
+			coolsquid.hungertweaker.ct.CTHungerOverhaul.releaseTickHandlerIfUnused();
 		}
 	}
 

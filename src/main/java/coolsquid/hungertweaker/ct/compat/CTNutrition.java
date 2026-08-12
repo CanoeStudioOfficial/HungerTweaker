@@ -13,7 +13,7 @@ import ca.wescook.nutrition.api.ItemStackCompareType;
 import ca.wescook.nutrition.api.NutritionUtil;
 import ca.wescook.nutrition.network.Sync;
 import ca.wescook.nutrition.nutrients.Nutrient;
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -26,7 +26,6 @@ import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.Nutrition")
 public class CTNutrition {
 
@@ -40,6 +39,14 @@ public class CTNutrition {
 	private static final List<PendingFoodChange> PENDING_FOOD_CHANGES = new ArrayList<>();
 
 	private CTNutrition() {
+	}
+
+	/** Registers this class only after Nutrition has been confirmed present. */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTNutrition.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTNutritionFoodEatenEvent.class);
+		}
 	}
 
 	@ZenMethod

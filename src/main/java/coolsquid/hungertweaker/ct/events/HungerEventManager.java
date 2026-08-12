@@ -38,6 +38,7 @@ public class HungerEventManager {
 	public static final EventList<CTFoodSpoilingFoodValuesEvent> FOOD_SPOILING_FOOD_VALUES = new EventList<>();
 	public static final EventList<CTToughAsNailsDrinkEvent> TOUGH_AS_NAILS_DRINK = new EventList<>();
 	public static final EventList<CTSimpleDifficultyDrinkEvent> SIMPLE_DIFFICULTY_DRINK = new EventList<>();
+	public static final EventList<CTSanityFoodEatenEvent> SANITY_FOOD_EATEN = new EventList<>();
 
 	@ZenMethod
 	public static IEventHandle onGetFoodValues(IEventHandler<CTGetFoodValuesEvent> handler) {
@@ -190,5 +191,10 @@ public class HungerEventManager {
 	@ZenMethod
 	public static IEventHandle onSDDrink(IEventHandler<CTSimpleDifficultyDrinkEvent> handler) {
 		return SIMPLE_DIFFICULTY_DRINK.add(handler);
+	}
+
+	@ZenMethod
+	public static IEventHandle onSanityFoodEaten(IEventHandler<CTSanityFoodEatenEvent> handler) {
+		return SANITY_FOOD_EATEN.add(handler);
 	}
 }

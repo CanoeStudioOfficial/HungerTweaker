@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -25,13 +25,20 @@ import squeek.spiceoflife.foodtracker.foodgroups.FoodGroupRegistry;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.SpiceOfLife")
 public class CTSpiceOfLife {
 
 	public static final String MODID = "spiceoflife";
 
 	private CTSpiceOfLife() {
+	}
+
+	/** Registers this class only after The Spice of Life has been confirmed present. */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTSpiceOfLife.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTSpiceOfLifeFoodEatenEvent.class);
+		}
 	}
 
 	@ZenMethod

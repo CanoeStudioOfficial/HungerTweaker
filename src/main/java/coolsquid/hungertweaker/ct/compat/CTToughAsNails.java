@@ -52,6 +52,7 @@ public class CTToughAsNails {
 	public static void registerIfLoaded() {
 		if (isLoaded()) {
 			CraftTweakerAPI.registerClass(CTToughAsNails.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTToughAsNailsDrinkEvent.class);
 		}
 	}
 

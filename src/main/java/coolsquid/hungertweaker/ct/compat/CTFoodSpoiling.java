@@ -3,7 +3,7 @@ package coolsquid.hungertweaker.ct.compat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -18,13 +18,20 @@ import net.minecraftforge.fml.common.Loader;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.FoodSpoiling")
 public class CTFoodSpoiling {
 
 	public static final String MODID = "foodspoiling";
 
 	private CTFoodSpoiling() {
+	}
+
+	/** Registers this class only after FoodSpoiling has been confirmed present. */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTFoodSpoiling.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTFoodSpoilingFoodValuesEvent.class);
+		}
 	}
 
 	@ZenMethod

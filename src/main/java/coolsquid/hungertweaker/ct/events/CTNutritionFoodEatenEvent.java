@@ -1,7 +1,6 @@
 package coolsquid.hungertweaker.ct.events;
 
 import coolsquid.hungertweaker.ct.compat.CTNutrition;
-import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import squeek.applecore.api.food.FoodEvent.FoodEaten;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -9,7 +8,6 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenSetter;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.events.NutritionFoodEatenEvent")
 public class CTNutritionFoodEatenEvent extends CTFoodEatenEvent {
 

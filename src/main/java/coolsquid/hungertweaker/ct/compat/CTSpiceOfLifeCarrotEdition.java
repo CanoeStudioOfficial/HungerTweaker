@@ -10,7 +10,7 @@ import com.cazsius.solcarrot.tracking.FoodInstance;
 import com.cazsius.solcarrot.tracking.FoodList;
 import com.cazsius.solcarrot.tracking.MaxHealthHandler;
 import com.cazsius.solcarrot.tracking.ProgressInfo;
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -22,13 +22,20 @@ import net.minecraftforge.fml.common.Loader;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.SpiceOfLifeCarrotEdition")
 public class CTSpiceOfLifeCarrotEdition {
 
 	public static final String MODID = "solcarrot";
 
 	private CTSpiceOfLifeCarrotEdition() {
+	}
+
+	/** Registers this class only after Carrot Edition has been confirmed present. */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTSpiceOfLifeCarrotEdition.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTSpiceOfLifeCarrotFoodEatenEvent.class);
+		}
 	}
 
 	@ZenMethod

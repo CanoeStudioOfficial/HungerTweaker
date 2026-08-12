@@ -55,6 +55,12 @@ dependencies {
     implementation rfg.deobf("curse.maven:foodspoiling-1133499:7147480")
 	implementation rfg.deobf("curse.maven:tough-as-nails-246391:2710969")
 	implementation rfg.deobf("curse.maven:simpledifficulty-for-underdog-574162:6266763")
+	implementation rfg.deobf("curse.maven:editableedibles-1052472:6808042")
+	implementation rfg.deobf("curse.maven:sanity-prequel-1134090:8546426")
+	implementation rfg.deobf("curse.maven:potion-core-242872:2905184")
+	implementation rfg.deobf("curse.maven:lemonskin-1337144:7763338")
+	implementation rfg.deobf("curse.maven:appleskin-248787:2987247")
+	implementation rfg.deobf("curse.maven:hunger-overhaul-224476:2565122")
     // Example - Dependency descriptor:
     // 'com.google.code.gson:gson:2.8.6' << group: com.google.code.gson, name:gson, version:2.8.6
     // 'group:name:version:classifier' where classifier is optional

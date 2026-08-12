@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import crafttweaker.annotations.ZenRegister;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -35,13 +35,20 @@ import com.charles445.simpledifficulty.item.ItemDrinkBase;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-@ZenRegister
 @ZenClass("mods.hungertweaker.SimpleDifficulty")
 public class CTSimpleDifficulty {
 
 	public static final String MODID = "simpledifficulty";
 
 	private CTSimpleDifficulty() {
+	}
+
+	/** Registers this class only after SimpleDifficulty has been confirmed present. */
+	public static void registerIfLoaded() {
+		if (isLoaded()) {
+			CraftTweakerAPI.registerClass(CTSimpleDifficulty.class);
+			CraftTweakerAPI.registerClass(coolsquid.hungertweaker.ct.events.CTSimpleDifficultyDrinkEvent.class);
+		}
 	}
 
 	@ZenMethod
