@@ -1,8 +1,6 @@
 package coolsquid.hungertweaker.ct.events;
 
-import coolsquid.hungertweaker.ct.compat.CTFoodSpoiling;
 import coolsquid.hungertweaker.ct.compat.CTSanity;
-import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.player.IPlayer;
 import squeek.applecore.api.food.FoodEvent.FoodEaten;
@@ -28,18 +26,6 @@ public class CTSanityFoodEatenEvent extends CTFoodEatenEvent {
 	@ZenGetter("sanity")
 	public float getSanity() {
 		return CTSanity.getSanity(this.getPlayer());
-	}
-
-	@ZenGetter("freshness")
-	public float getFreshness() {
-		return CTFoodSpoiling.isLoaded()
-				? CTFoodSpoiling.getFreshness(this.getPlayer(), CraftTweakerMC.getIItemStack(this.internal.food))
-				: 1;
-	}
-
-	@ZenGetter("food")
-	public IItemStack getSanityFood() {
-		return CraftTweakerMC.getIItemStack(this.internal.food);
 	}
 
 	@ZenMethod
